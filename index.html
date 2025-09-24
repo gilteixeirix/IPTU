@@ -3,325 +3,405 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>MyToken - Interface</title>
-<!-- Ethers v5 (estável) -->
-<script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
-
-<!-- OU, se quiser v6 -->
-<!-- <script src="https://cdn.jsdelivr.net/npm/ethers@6.13.2/dist/ethers.umd.min.js"></script> -->
-
+  <title>IPTU Chain — Painel Completo</title>
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
   <style>
-    :root{font-family:Inter, system-ui, Arial; --bg:#0f1724; --card:#0b1220; --accent:#7c3aed; --muted:#94a3b8; color:#e6eef8}
-    body{margin:0;background:linear-gradient(180deg,#071022 0%, #071733 100%);font-family:Inter, Arial, sans-serif;color:var(--muted);}
-    .wrap{max-width:900px;margin:28px auto;padding:20px}
-    header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+    :root{--bg:#0f1724;--card:#071329;--accent:#7c3aed;--muted:#9fb0c8;color:#e6eef8}
+    body{margin:0;background:linear-gradient(180deg,#071022 0%, #071733 100%);font-family:Inter, Arial, sans-serif;color:var(--muted);padding:20px}
+    .wrap{max-width:980px;margin:12px auto}
+    header{display:flex;justify-content:space-between;align-items:center}
     h1{color:#fff;margin:0;font-size:20px}
-    .card{background:rgba(255,255,255,0.03);border-radius:12px;padding:16px;margin-bottom:12px;box-shadow:0 6px 18px rgba(2,6,23,0.6)}
-
-    label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
-    input[type=text], input[type=number], select{width:100%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:var(--muted);box-sizing:border-box}
-    button{background:var(--accent);color:#fff;padding:10px 12px;border:none;border-radius:8px;cursor:pointer}
+    .card{background:rgba(255,255,255,0.03);border-radius:12px;padding:16px;margin:12px 0;box-shadow:0 6px 18px rgba(2,6,23,0.6)}
+    label{display:block;font-size:13px;color:var(--muted);margin-top:8px}
+    input[type=text], input[type=number], textarea, select{width:100%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:var(--muted);box-sizing:border-box}
+    button{background:var(--accent);color:#fff;padding:8px 12px;border:none;border-radius:8px;cursor:pointer}
     .muted{color:var(--muted);font-size:13px}
     .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .result{white-space:pre-wrap;background:rgba(0,0,0,0.18);padding:10px;border-radius:8px;color:#dcefff;margin-top:8px}
+    footer{margin-top:12px;color:var(--muted);font-size:13px;text-align:center}
     .small{font-size:13px;color:var(--muted)}
-    pre{white-space:pre-wrap;background:rgba(0,0,0,0.25);padding:8px;border-radius:8px;color:#dcefff}
-    footer{margin-top:16px;text-align:center;color:var(--muted);font-size:13px}
   </style>
 </head>
 <body>
   <div class="wrap">
     <header>
-      <h1>MyToken (GTX) — Interface MetaMask</h1>
-      <div id="wallet-area" class="muted">MetaMask: <span id="mm-status">desconectado</span></div>
+      <h1>IPTU Chain — Painel Completo</h1>
+      <div class="muted">Conta: <span id="addr">—</span></div>
     </header>
 
-    <section class="card">
+    <div class="card">
+      <button id="connectBtn">Conectar MetaMask</button>
       <label for="contractAddr">Endereço do contrato</label>
-      <input id="contractAddr" type="text" placeholder="0x... (cole aqui o endereço do contrato)" />
-      <div style="margin-top:10px;display:flex;gap:8px">
-        <button id="connectBtn">Conectar MetaMask</button>
+      <input id="contractAddr" placeholder="0x... (cole aqui ou deixe placeholder)" />
+      <div style="margin-top:8px;display:flex;gap:8px">
         <button id="loadBtn">Carregar contrato</button>
+        <button id="refreshMetaBtn">Atualizar meta</button>
       </div>
-      <p class="small">No campo abaixo você pode ver mensagens de status.</p>
-      <pre id="status">Aguardando ação...</pre>
-    </section>
+      <div class="result" id="status">Aguardando ação...</div>
+    </div>
 
-    <section id="infoSection" class="card" style="display:none">
+    <!-- Consulta / Id -->
+    <div class="card">
+      <h3 style="color:#fff;margin-top:0">Consultar Lançamento</h3>
       <div class="row">
         <div>
-          <label>Contrato</label>
-          <div id="cAddress" class="small"></div>
+          <label>Inscrição</label>
+          <input id="inscricao" placeholder="ex: 12345-6" />
         </div>
         <div>
-          <label>Rede</label>
-          <div id="network" class="small"></div>
+          <label>Ano</label>
+          <input id="ano" type="number" placeholder="2025" />
         </div>
       </div>
-
-      <div style="margin-top:10px">
-        <label>Nome / Símbolo / Decimals</label>
-        <div id="meta" class="small"></div>
+      <div style="margin-top:8px;display:flex;gap:8px">
+        <button id="makeIdBtn">Gerar ID (keccak256)</button>
+        <button id="consultBtn">Consultar getResumo + listarParcelas</button>
       </div>
+      <label>ID (bytes32)</label>
+      <input id="idField" placeholder="0x..." />
+      <div class="result" id="resumoArea">—</div>
+    </div>
 
-      <div style="margin-top:8px">
-        <label>Saldo (da conta conectada)</label>
-        <div id="balance" class="small">-</div>
-      </div>
-
-      <div style="margin-top:8px">
-        <label>Total supply</label>
-        <div id="supply" class="small">-</div>
-      </div>
-    </section>
-
-    <section id="actions" class="card" style="display:none">
-      <h3 style="color:#fff;margin-top:0">Ações</h3>
-
-      <div style="margin-bottom:12px">
-        <label>Transferir tokens</label>
-        <div class="row">
-          <input id="toAddr" type="text" placeholder="Endereço destino" />
-          <input id="amountTransfer" type="number" placeholder="Quantidade (ex: 1.5)" step="any" />
+    <!-- Pagamento -->
+    <div class="card">
+      <h3 style="color:#fff;margin-top:0">Pagar Parcela</h3>
+      <label>ID do lançamento (ou gere a partir de inscrição/ano acima)</label>
+      <input id="payId" placeholder="0x..." />
+      <div class="row">
+        <div>
+          <label>Nº da parcela</label>
+          <input id="parcelaNum" type="number" placeholder="1" />
         </div>
-        <div style="margin-top:8px;display:flex;gap:8px">
-          <button id="transferBtn">Enviar</button>
-          <button id="refreshBalBtn">Atualizar Saldo</button>
+        <div>
+          <label>Valor (ETH)</label>
+          <input id="parcelaVal" placeholder="ex: 0.1" />
         </div>
       </div>
+      <div style="margin-top:8px;display:flex;gap:8px">
+        <button id="fillParcelValue">Buscar valor oficial</button>
+        <button id="payBtn">Pagar Parcela</button>
+      </div>
+      <div class="result" id="payStatus">—</div>
+    </div>
 
-      <div style="margin-bottom:12px">
-        <label>Burn (queimar do seu saldo)</label>
-        <div class="row">
-          <input id="burnAmount" type="number" placeholder="Quantidade (ex: 0.5)" step="any" />
-          <div></div>
-        </div>
+    <!-- Admin: Lancar, setAtivo, atualizarPrefeitura -->
+    <div class="card" id="adminCard" style="display:none">
+      <h3 style="color:#fff;margin-top:0">Administração (prefeitura / owner)</h3>
+
+      <details open>
+        <summary style="cursor:pointer">Lançar IPTU (somente prefeitura)</summary>
         <div style="margin-top:8px">
-          <button id="burnBtn">Queimar</button>
+          <label>Inscrição</label>
+          <input id="l_inscricao" />
+          <label>Contribuinte (endereço)</label>
+          <input id="l_contribuinte" placeholder="0x..." />
+          <div class="row">
+            <div>
+              <label>Ano</label>
+              <input id="l_ano" type="number" />
+            </div>
+            <div>
+              <label>Parcelas (ex: 12)</label>
+              <input id="l_parcelas" type="number" />
+            </div>
+          </div>
+          <label>Total (ETH)</label>
+          <input id="l_total" placeholder="ex: 1.5 (ETH)" />
+          <div style="margin-top:8px;display:flex;gap:8px">
+            <button id="lancarBtn">Lançar IPTU</button>
+            <button id="lancarPreviewBtn">Simular (callStatic) e mostrar ID</button>
+          </div>
+          <div class="result" id="lancarStatus">—</div>
         </div>
-      </div>
+      </details>
 
-      <div style="margin-bottom:12px">
-        <label>Mint (somente owner)</label>
+      <details style="margin-top:8px">
+        <summary style="cursor:pointer">Ativar/Desativar lançamento (owner)</summary>
+        <label>ID</label>
+        <input id="setAtivoId" />
         <div class="row">
-          <input id="mintTo" type="text" placeholder="Endereço que receberá" />
-          <input id="mintAmount" type="number" placeholder="Quantidade (ex: 100)" step="any" />
+          <div>
+            <label>Ativo?</label>
+            <select id="setAtivoVal"><option value="true">true</option><option value="false">false</option></select>
+          </div>
+          <div style="align-self:end">
+            <button id="setAtivoBtn">Atualizar</button>
+          </div>
         </div>
+        <div class="result" id="setAtivoStatus">—</div>
+      </details>
+
+      <details style="margin-top:8px">
+        <summary style="cursor:pointer">Atualizar Prefeitura (owner)</summary>
+        <label>Nova prefeitura (endereço)</label>
+        <input id="novaPref" placeholder="0x..." />
+        <div style="margin-top:8px">
+          <button id="atualizarPrefBtn">Atualizar Prefeitura</button>
+        </div>
+        <div class="result" id="atualizarPrefStatus">—</div>
+      </details>
+
+      <details style="margin-top:8px">
+        <summary style="cursor:pointer">Repassar saldo (owner)</summary>
         <div style="margin-top:8px;display:flex;gap:8px">
-          <button id="mintBtn">Mintar</button>
-          <button id="checkOwnerBtn">Verificar owner</button>
+          <button id="repassarBtn">Repassar Saldo</button>
+          <button id="checkBalBtn">Checar Saldo do Contrato</button>
         </div>
-      </div>
+        <div class="result" id="repassarStatus">—</div>
+      </details>
 
-      <div style="margin-bottom:12px">
-        <label>Pause / Unpause (somente owner)</label>
-        <div style="display:flex;gap:8px">
-          <button id="pauseBtn">Pausar</button>
-          <button id="unpauseBtn">Despausar</button>
-          <div style="align-self:center;color:var(--muted);margin-left:8px">Estado: <span id="pausedState">-</span></div>
+      <details style="margin-top:8px">
+        <summary style="cursor:pointer">Transferir Propriedade (owner)</summary>
+        <label>Novo owner (endereço)</label>
+        <input id="newOwner" placeholder="0x..." />
+        <div style="margin-top:8px">
+          <button id="transferOwnerBtn">Transferir Owner</button>
         </div>
-      </div>
+        <div class="result" id="transferOwnerStatus">—</div>
+      </details>
 
-    </section>
+    </div>
 
-    <footer class="muted">Obs: converta valores para as unidades mínimas com base em <code>decimals()</code>. A interface faz a conversão automaticamente.</footer>
+    <footer>Observação: insira valores monetários em ETH — a interface converte para wei automaticamente. Funções administrativas só serão executadas se a conta conectada tiver permissões (owner / prefeitura).</footer>
   </div>
 
   <script>
-    // ABI mínimo utilizado (aproximado) — ajuste se o seu contrato tiver nomes/assinaturas diferentes
+    // ABI (fragmentos) — mantive apenas funções públicas usadas pela interface
     const ABI = [
-      "function name() view returns (string)",
-      "function symbol() view returns (string)",
-      "function decimals() view returns (uint8)",
-      "function totalSupply() view returns (uint256)",
-      "function balanceOf(address) view returns (uint256)",
-      "function transfer(address to, uint256 amount) returns (bool)",
-      "function burn(uint256 amount)",
-      "function mint(address to, uint256 amount)",
-      "function pause()",
-      "function unpause()",
+      "function prefeitura() view returns (address)",
       "function owner() view returns (address)",
-      "function paused() view returns (bool)"
+      "function atualizarPrefeitura(address nova)",
+      "function lancarIPTU(string inscricao, address contribuinte, uint256 ano, uint256 total, uint256 parcelas) returns (bytes32)",
+      "function setAtivo(bytes32 id, bool ativo)",
+      "function pagarParcela(bytes32 id, uint256 parcela) payable",
+      "function repassarSaldo()",
+      "function getResumo(bytes32 id) view returns (string inscricao, address contribuinte, uint256 ano, uint256 total, uint256 parcelas, uint256 valorParcela, uint256 pagas, uint256 valorPago, bool ativo)",
+      "function parcelaEstaPaga(bytes32 id, uint256 parcela) view returns (bool)",
+      "function listarParcelasPagas(bytes32 id) view returns (bool[])",
+      "function transferOwnership(address novoOwner)"
     ];
 
-    let provider, signer, contract, decimalsVal = 18;
+    // Substitua o valor abaixo pelo endereço do contrato deployado ou cole no campo na UI
+    let contractAddress = "0xREPLACE_CONTRACT_ADDRESS";
+
+    let provider, signer, contract, connectedAddress;
 
     const connectBtn = document.getElementById('connectBtn');
     const loadBtn = document.getElementById('loadBtn');
+    const refreshMetaBtn = document.getElementById('refreshMetaBtn');
     const statusEl = document.getElementById('status');
-    const mmStatus = document.getElementById('mm-status');
+    const addrEl = document.getElementById('addr');
 
     connectBtn.onclick = async () => {
-      if (!window.ethereum) {
-        alert('MetaMask não detectado. Instale/ative a extensão.');
-        return;
-      }
+      if (!window.ethereum) return alert('MetaMask não detectado');
       try {
-        await window.ethereum.request({ method: 'eth_requestAccounts' });
         provider = new ethers.providers.Web3Provider(window.ethereum);
+        await provider.send('eth_requestAccounts', []);
         signer = provider.getSigner();
-        const address = await signer.getAddress();
-        mmStatus.textContent = address;
-        status('Conectado: ' + shorten(address));
-        // listen for chain/account changes
+        connectedAddress = await signer.getAddress();
+        addrEl.textContent = connectedAddress;
+        status('MetaMask conectado: ' + connectedAddress);
+
         window.ethereum.on('accountsChanged', handleAccountsChanged);
         window.ethereum.on('chainChanged', handleChainChanged);
-      } catch (err) {
-        status('Erro ao conectar: ' + (err.message || err));
-      }
-    }
+      } catch (e) { status('Erro ao conectar: ' + (e.message||e)); }
+    };
 
     loadBtn.onclick = async () => {
-      const addr = document.getElementById('contractAddr').value.trim();
-      if (!addr) { status('Forneça o endereço do contrato.'); return; }
-      if (!ethers.utils.isAddress(addr)) { status('Endereço inválido.'); return; }
-      if (!provider) {
-        status('Conecte o MetaMask primeiro.'); return;
-      }
-      contract = new ethers.Contract(addr, ABI, signer);
-      document.getElementById('infoSection').style.display = 'block';
-      document.getElementById('actions').style.display = 'block';
-      document.getElementById('cAddress').textContent = addr;
+      const addrInput = document.getElementById('contractAddr').value.trim();
+      if (addrInput) contractAddress = addrInput;
+      if (!ethers.utils.isAddress(contractAddress)) { status('Endereço do contrato inválido.'); return; }
+      if (!provider) provider = new ethers.providers.Web3Provider(window.ethereum);
+      signer = provider.getSigner();
+      contract = new ethers.Contract(contractAddress, ABI, signer);
+      status('Contrato carregado: ' + contractAddress);
+      await refreshMeta();
+    };
+
+    refreshMetaBtn.onclick = async () => {
+      if (!contract) return status('Carregue o contrato primeiro');
+      await refreshMeta();
+    };
+
+    async function refreshMeta(){
       try {
-        const network = await provider.getNetwork();
-        document.getElementById('network').textContent = network.name + ' (chainId: ' + network.chainId + ')';
-
-        const [name, symbol, dec, total, paused, ownerAddr] = await Promise.all([
-          contract.name().catch(()=>"-"),
-          contract.symbol().catch(()=>"-"),
-          contract.decimals().catch(()=>18),
-          contract.totalSupply().catch(()=>0),
-          contract.paused().catch(()=>false),
-          contract.owner().catch(()=>null),
-        ]);
-        decimalsVal = Number(dec);
-        document.getElementById('meta').textContent = `${name} / ${symbol} / decimals: ${decimalsVal}`;
-        document.getElementById('supply').textContent = formatUnits(total, decimalsVal) + ' ' + symbol;
-        document.getElementById('pausedState').textContent = paused ? 'PAUSADO' : 'ATIVO';
-        document.getElementById('status').textContent = 'Contrato carregado. Owner: ' + (ownerAddr||'-');
-
-        await refreshBalance();
-      } catch (err) {
-        status('Erro ao carregar dados do contrato: ' + (err.message||err));
-      }
+        const pref = await contract.prefeitura().catch(()=>null);
+        const own = await contract.owner().catch(()=>null);
+        status(`owner: ${own || '-'}\nprefeitura: ${pref || '-'}\nendereço: ${contractAddress}`);
+        document.getElementById('adminCard').style.display = (connectedAddress && (connectedAddress.toLowerCase() === own?.toLowerCase() || connectedAddress.toLowerCase() === pref?.toLowerCase())) ? 'block' : 'none';
+      } catch (e) { status('Erro ao buscar meta: ' + (e.message||e)); }
     }
 
-    async function refreshBalance() {
-      try {
-        const addr = await signer.getAddress();
-        const bal = await contract.balanceOf(addr);
-        document.getElementById('balance').textContent = formatUnits(bal, decimalsVal);
-        status('Saldo atualizado');
-      } catch (err) {
-        status('Erro ao buscar saldo: ' + (err.message||err));
-      }
-    }
-
-    document.getElementById('refreshBalBtn').onclick = refreshBalance;
-
-    document.getElementById('transferBtn').onclick = async () => {
-      const to = document.getElementById('toAddr').value.trim();
-      const amount = document.getElementById('amountTransfer').value;
-      if (!ethers.utils.isAddress(to)) { alert('Endereço destino inválido'); return; }
-      if (!amount || Number(amount) <= 0) { alert('Quantidade inválida'); return; }
-      try {
-        const amt = parseUnits(amount, decimalsVal);
-        const tx = await contract.transfer(to, amt);
-        status('Transação enviada. Hash: ' + tx.hash);
-        await tx.wait();
-        status('Transferência confirmada.');
-        await refreshBalance();
-      } catch (err) {
-        status('Erro na transferência: ' + (err.message||err));
-      }
-    }
-
-    document.getElementById('burnBtn').onclick = async () => {
-      const amount = document.getElementById('burnAmount').value;
-      if (!amount || Number(amount) <= 0) { alert('Quantidade inválida'); return; }
-      try {
-        const amt = parseUnits(amount, decimalsVal);
-        const tx = await contract.burn(amt);
-        status('Queima enviada. Hash: ' + tx.hash);
-        await tx.wait();
-        status('Queima confirmada.');
-        await refreshBalance();
-      } catch (err) {
-        status('Erro no burn: ' + (err.message||err));
-      }
-    }
-
-    document.getElementById('mintBtn').onclick = async () => {
-      const to = document.getElementById('mintTo').value.trim();
-      const amount = document.getElementById('mintAmount').value;
-      if (!ethers.utils.isAddress(to)) { alert('Endereço inválido'); return; }
-      if (!amount || Number(amount) <= 0) { alert('Quantidade inválida'); return; }
-      try {
-        const amt = parseUnits(amount, decimalsVal);
-        const tx = await contract.mint(to, amt);
-        status('Mint enviada. Hash: ' + tx.hash);
-        await tx.wait();
-        status('Mint confirmada.');
-      } catch (err) {
-        status('Erro no mint: ' + (err.message||err));
-      }
-    }
-
-    document.getElementById('checkOwnerBtn').onclick = async () => {
-      try {
-        const ownerAddr = await contract.owner();
-        status('Owner: ' + ownerAddr);
-      } catch (err) { status('Erro: ' + (err.message||err)); }
-    }
-
-    document.getElementById('pauseBtn').onclick = async () => {
-      try {
-        const tx = await contract.pause();
-        status('Pausa enviada. Hash: ' + tx.hash);
-        await tx.wait();
-        status('Contrato pausado.');
-        document.getElementById('pausedState').textContent = 'PAUSADO';
-      } catch (err) { status('Erro ao pausar: ' + (err.message||err)); }
-    }
-    document.getElementById('unpauseBtn').onclick = async () => {
-      try {
-        const tx = await contract.unpause();
-        status('Unpause enviada. Hash: ' + tx.hash);
-        await tx.wait();
-        status('Contrato despausado.');
-        document.getElementById('pausedState').textContent = 'ATIVO';
-      } catch (err) { status('Erro ao despausar: ' + (err.message||err)); }
-    }
-
-    function status(msg){
-      statusEl.textContent = msg;
-      console.log(msg);
-    }
-
-    function shorten(addr){ return addr ? addr.substr(0,6) + '...' + addr.substr(-4) : '' }
-
-    function parseUnits(amount, dec){
-      try { return ethers.utils.parseUnits(String(amount), dec); }
-      catch(e){ return ethers.BigNumber.from(String(Math.floor(Number(amount) * (10**dec)))); }
-    }
-    function formatUnits(bn, dec){
-      try { return ethers.utils.formatUnits(bn, dec); } catch(e){ return String(bn); }
-    }
+    function status(msg){ document.getElementById('status').textContent = msg; console.log(msg); }
 
     function handleAccountsChanged(accounts){
-      if (accounts.length === 0) { mmStatus.textContent = 'desconectado'; status('Conta desconectada'); }
-      else { mmStatus.textContent = accounts[0]; status('Conta alterada: ' + shorten(accounts[0])); }
+      if(accounts.length===0){ addrEl.textContent='—'; connectedAddress=null; status('Conta desconectada'); }
+      else { connectedAddress = accounts[0]; addrEl.textContent = connectedAddress; status('Conta alterada: ' + connectedAddress); }
     }
-    function handleChainChanged(chainId){
-      status('Chain changed: ' + chainId);
-      // opcional: recarregar página para reconectar provider
-    }
+    function handleChainChanged(chainId){ status('Chain changed: ' + chainId); }
 
-    // initial check
-    if (window.ethereum) {
-      mmStatus.textContent = 'disponível (não conectado)';
-    } else {
-      mmStatus.textContent = 'MetaMask não detectado';
-    }
+    // ---------- ID helpers ----------
+    document.getElementById('makeIdBtn').onclick = async () => {
+      const inscr = document.getElementById('inscricao').value.trim();
+      const ano = Number(document.getElementById('ano').value);
+      if(!inscr || !ano) return alert('Preencha inscrição e ano');
+      try {
+        const id = ethers.utils.solidityKeccak256(['string','uint256'], [inscr, ano]);
+        document.getElementById('idField').value = id;
+        document.getElementById('payId').value = id;
+        document.getElementById('setAtivoId').value = id;
+        status('ID gerado: ' + id);
+      } catch (e) { status('Erro ao gerar id: ' + (e.message||e)); }
+    };
+
+    // ---------- Consultar ----------
+    document.getElementById('consultBtn').onclick = async () => {
+      try {
+        const id = document.getElementById('idField').value.trim();
+        if(!id) return alert('Gere ou cole o id do lançamento');
+        const r = await contract.getResumo(id);
+        const lista = await contract.listarParcelasPagas(id);
+        const texto = [];
+        texto.push('Inscrição: ' + r[0]);
+        texto.push('Contribuinte: ' + r[1]);
+        texto.push('Ano: ' + r[2]);
+        texto.push('Total: ' + ethers.utils.formatEther(r[3]) + ' ETH');
+        texto.push('Parcelas: ' + r[4]);
+        texto.push('ValorParcela: ' + ethers.utils.formatEther(r[5]) + ' ETH');
+        texto.push('Pagas: ' + r[6]);
+        texto.push('ValorPago: ' + ethers.utils.formatEther(r[7]) + ' ETH');
+        texto.push('Ativo: ' + r[8]);
+        texto.push('Status parcelas: ' + lista.map((p,i)=>`[${i+1}:${p? '✔' : '✖'}]`).join(' '));
+        document.getElementById('resumoArea').textContent = texto.join('\n');
+        // preencher campos de pagamento automaticamente
+        document.getElementById('parcelaVal').value = ethers.utils.formatEther(r[5]);
+        document.getElementById('payId').value = id;
+      } catch(e){ console.error(e); alert('Erro na consulta: ' + (e.message||e)); }
+    };
+
+    // ---------- Pagar ----------
+    document.getElementById('fillParcelValue').onclick = async () => {
+      try{
+        const id = document.getElementById('payId').value.trim();
+        const parcela = Number(document.getElementById('parcelaNum').value);
+        if(!id || !parcela) return alert('Preencha id e número da parcela');
+        const r = await contract.getResumo(id);
+        document.getElementById('parcelaVal').value = ethers.utils.formatEther(r[5]);
+        status('Valor da parcela preenchido com sucesso');
+      } catch(e){ console.error(e); alert('Erro ao buscar valor da parcela'); }
+    };
+
+    document.getElementById('payBtn').onclick = async () => {
+      try{
+        const id = document.getElementById('payId').value.trim();
+        const parcela = Number(document.getElementById('parcelaNum').value);
+        const val = document.getElementById('parcelaVal').value.trim();
+        if(!id || !parcela || !val) return alert('Preencha id, parcela e valor');
+        const valueWei = ethers.utils.parseEther(val);
+        const tx = await contract.pagarParcela(id, parcela, { value: valueWei });
+        document.getElementById('payStatus').textContent = 'Transação enviada: ' + tx.hash;
+        await tx.wait();
+        document.getElementById('payStatus').textContent += '\n✅ Confirmada';
+      } catch(e){ console.error(e); alert('Erro no pagamento: ' + (e.message||e)); }
+    };
+
+    // ---------- Lançar IPTU (prefeitura) ----------
+    document.getElementById('lancarPreviewBtn').onclick = async () => {
+      try{
+        const inscr = document.getElementById('l_inscricao').value.trim();
+        const cont = document.getElementById('l_contribuinte').value.trim();
+        const ano = Number(document.getElementById('l_ano').value);
+        const parcelas = Number(document.getElementById('l_parcelas').value);
+        const totalEth = document.getElementById('l_total').value.trim();
+        if(!inscr || !cont || !ano || !parcelas || !totalEth) return alert('Preencha todos os campos');
+        const totalWei = ethers.utils.parseEther(totalEth);
+        // valida divisão exata localmente (opcional)
+        if(!totalWei.mod(ethers.BigNumber.from(parcelas)).isZero()){
+          if(!confirm('A divisão do total por parcelas não é exata em wei. O contrato rejeitará. Deseja continuar?')) return; 
+        }
+        const id = await contract.callStatic.lancarIPTU(inscr, cont, ano, totalWei, parcelas);
+        document.getElementById('lancarStatus').textContent = 'Simulação OK. id previsto: ' + id;
+      } catch(e){ console.error(e); alert('Erro na simulação: ' + (e.message||e)); }
+    };
+
+    document.getElementById('lancarBtn').onclick = async () => {
+      try{
+        const inscr = document.getElementById('l_inscricao').value.trim();
+        const cont = document.getElementById('l_contribuinte').value.trim();
+        const ano = Number(document.getElementById('l_ano').value);
+        const parcelas = Number(document.getElementById('l_parcelas').value);
+        const totalEth = document.getElementById('l_total').value.trim();
+        if(!inscr || !cont || !ano || !parcelas || !totalEth) return alert('Preencha todos os campos');
+        if(!ethers.utils.isAddress(cont)) return alert('Endereço do contribuinte inválido');
+        const totalWei = ethers.utils.parseEther(totalEth);
+        if(!totalWei.mod(ethers.BigNumber.from(parcelas)).isZero()){
+          if(!confirm('A divisão do total por parcelas não é exata em wei. O contrato rejeitará. Deseja continuar?')) return; 
+        }
+        const tx = await contract.lancarIPTU(inscr, cont, ano, totalWei, parcelas);
+        document.getElementById('lancarStatus').textContent = 'Tx enviada: ' + tx.hash;
+        const rc = await tx.wait();
+        // tentar extrair o id retornado (alguns nodes não retornam return value) — pedimos callStatic antes se quiser o id previsível
+        document.getElementById('lancarStatus').textContent += '\nConfirmada';
+      } catch(e){ console.error(e); alert('Erro ao lançar IPTU: ' + (e.message||e)); }
+    };
+
+    // ---------- setAtivo ----------
+    document.getElementById('setAtivoBtn').onclick = async () => {
+      try{
+        const id = document.getElementById('setAtivoId').value.trim();
+        const val = document.getElementById('setAtivoVal').value === 'true';
+        if(!id) return alert('Informe o id');
+        const tx = await contract.setAtivo(id, val);
+        document.getElementById('setAtivoStatus').textContent = 'Tx enviada: ' + tx.hash;
+        await tx.wait();
+        document.getElementById('setAtivoStatus').textContent += '\n✅ Atualizado';
+      } catch(e){ console.error(e); alert('Erro no setAtivo: ' + (e.message||e)); }
+    };
+
+    // ---------- atualizarPrefeitura ----------
+    document.getElementById('atualizarPrefBtn').onclick = async () => {
+      try{
+        const nova = document.getElementById('novaPref').value.trim();
+        if(!ethers.utils.isAddress(nova)) return alert('Endereço inválido');
+        const tx = await contract.atualizarPrefeitura(nova);
+        document.getElementById('atualizarPrefStatus').textContent = 'Tx enviada: ' + tx.hash;
+        await tx.wait();
+        document.getElementById('atualizarPrefStatus').textContent += '\n✅ Prefeitura atualizada';
+      } catch(e){ console.error(e); alert('Erro ao atualizar prefeitura: ' + (e.message||e)); }
+    };
+
+    // ---------- repassarSaldo ----------
+    document.getElementById('repassarBtn').onclick = async () => {
+      try{
+        const tx = await contract.repassarSaldo();
+        document.getElementById('repassarStatus').textContent = 'Tx enviada: ' + tx.hash;
+        await tx.wait();
+        document.getElementById('repassarStatus').textContent += '\n✅ Repasse efetuado';
+      } catch(e){ console.error(e); alert('Erro ao repassar saldo: ' + (e.message||e)); }
+    };
+
+    document.getElementById('checkBalBtn').onclick = async () => {
+      try{
+        const bal = await provider.getBalance(contractAddress);
+        document.getElementById('repassarStatus').textContent = 'Saldo do contrato: ' + ethers.utils.formatEther(bal) + ' ETH';
+      } catch(e){ console.error(e); alert('Erro ao checar saldo'); }
+    };
+
+    // ---------- transferOwnership ----------
+    document.getElementById('transferOwnerBtn').onclick = async () => {
+      try{
+        const novo = document.getElementById('newOwner').value.trim();
+        if(!ethers.utils.isAddress(novo)) return alert('Endereço inválido');
+        const tx = await contract.transferOwnership(novo);
+        document.getElementById('transferOwnerStatus').textContent = 'Tx enviada: ' + tx.hash;
+        await tx.wait();
+        document.getElementById('transferOwnerStatus').textContent += '\n✅ Ownership transferido';
+      } catch(e){ console.error(e); alert('Erro ao transferir owner: ' + (e.message||e)); }
+    };
+
+    // Auto-fill contract address field with placeholder
+    document.getElementById('contractAddr').value = contractAddress === '0xREPLACE_CONTRACT_ADDRESS' ? '' : contractAddress;
+
   </script>
 </body>
 </html>
