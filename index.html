@@ -1,27 +1,133 @@
 <!doctype html>
 <html lang="pt-BR">
+
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>IPTU Chain — Painel Completo</title>
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
   <style>
-    :root{--bg:#0f1724;--card:#071329;--accent:#7c3aed;--muted:#9fb0c8;color:#e6eef8}
-    body{margin:0;background:linear-gradient(180deg,#071022 0%, #071733 100%);font-family:Inter, Arial, sans-serif;color:var(--muted);padding:20px}
-    .wrap{max-width:980px;margin:12px auto}
-    header{display:flex;justify-content:space-between;align-items:center}
-    h1{color:#fff;margin:0;font-size:20px}
-    .card{background:rgba(255,255,255,0.03);border-radius:12px;padding:16px;margin:12px 0;box-shadow:0 6px 18px rgba(2,6,23,0.6)}
-    label{display:block;font-size:13px;color:var(--muted);margin-top:8px}
-    input[type=text], input[type=number], textarea, select{width:100%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:var(--muted);box-sizing:border-box}
-    button{background:var(--accent);color:#fff;padding:8px 12px;border:none;border-radius:8px;cursor:pointer}
-    .muted{color:var(--muted);font-size:13px}
-    .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-    .result{white-space:pre-wrap;background:rgba(0,0,0,0.18);padding:10px;border-radius:8px;color:#dcefff;margin-top:8px}
-    footer{margin-top:12px;color:var(--muted);font-size:13px;text-align:center}
-    .small{font-size:13px;color:var(--muted)}
+    :root {
+      --bg: #0f1724;
+      --card: #071329;
+      --accent: #7c3aed;
+      --muted: #9fb0c8;
+      color: #e6eef8
+    }
+
+    body {
+      margin: 0;
+      background: linear-gradient(180deg, #071022 0%, #071733 100%);
+      font-family: Inter, Arial, sans-serif;
+      color: var(--muted);
+      padding: 20px
+    }
+
+    .wrap {
+      max-width: 980px;
+      margin: 12px auto
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center
+    }
+
+
+    h1 {
+      color: #fff;
+      margin: 0;
+      font-size: clamp(1.2rem, 2vw, 1.8rem)
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 12px;
+      padding: 16px;
+      margin: 12px 0;
+      box-shadow: 0 6px 18px rgba(2, 6, 23, 0.6)
+    }
+
+    label {
+      display: block;
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 8px
+    }
+
+    input[type=text],
+    input[type=number],
+    textarea,
+    select {
+      width: 100%;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      background: transparent;
+      color: var(--muted);
+      box-sizing: border-box
+    }
+
+    button {
+      background: var(--accent);
+      color: #fff;
+      padding: 8px 12px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer
+    }
+
+    .muted {
+      color: var(--muted);
+      font-size: 13px
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px
+    }
+
+    .result {
+      white-space: pre-wrap;
+      background: rgba(0, 0, 0, 0.18);
+      padding: 10px;
+      border-radius: 8px;
+      color: #dcefff;
+      margin-top: 8px
+    }
+
+    footer {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 13px;
+      text-align: center
+    }
+
+    .small {
+      font-size: 13px;
+      color: var(--muted)
+    }
+
+    @media (max-width: 600px) {
+      .row {
+        grid-template-columns: 1fr;
+      }
+
+      body {
+        padding: 12px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      h1 {
+        font-size: 1.4rem;
+      }
+    }
   </style>
 </head>
+
 <body>
   <div class="wrap">
     <header>
@@ -33,7 +139,7 @@
       <button id="connectBtn">Conectar MetaMask</button>
       <label for="contractAddr">Endereço do contrato</label>
       <input id="contractAddr" placeholder="0x... (cole aqui ou deixe placeholder)" />
-      <div style="margin-top:8px;display:flex;gap:8px">
+      <div style="margin-top:8px;"display:flex"] { flex-wrap: wrap;">
         <button id="loadBtn">Carregar contrato</button>
         <button id="refreshMetaBtn">Atualizar meta</button>
       </div>
@@ -53,7 +159,7 @@
           <input id="ano" type="number" placeholder="2025" />
         </div>
       </div>
-      <div style="margin-top:8px;display:flex;gap:8px">
+      <div style="margin-top:8px;"display:flex"] { flex-wrap: wrap;">
         <button id="makeIdBtn">Gerar ID (keccak256)</button>
         <button id="consultBtn">Consultar getResumo + listarParcelas</button>
       </div>
@@ -77,7 +183,7 @@
           <input id="parcelaVal" placeholder="ex: 0.1" />
         </div>
       </div>
-      <div style="margin-top:8px;display:flex;gap:8px">
+      <div style="margin-top:8px;"display:flex"] { flex-wrap: wrap;">
         <button id="fillParcelValue">Buscar valor oficial</button>
         <button id="payBtn">Pagar Parcela</button>
       </div>
@@ -107,7 +213,7 @@
           </div>
           <label>Total (ETH)</label>
           <input id="l_total" placeholder="ex: 1.5 (ETH)" />
-          <div style="margin-top:8px;display:flex;gap:8px">
+          <div style="margin-top:8px;"display:flex"] { flex-wrap: wrap;">
             <button id="lancarBtn">Lançar IPTU</button>
             <button id="lancarPreviewBtn">Simular (callStatic) e mostrar ID</button>
           </div>
@@ -122,7 +228,10 @@
         <div class="row">
           <div>
             <label>Ativo?</label>
-            <select id="setAtivoVal"><option value="true">true</option><option value="false">false</option></select>
+            <select id="setAtivoVal">
+              <option value="true">true</option>
+              <option value="false">false</option>
+            </select>
           </div>
           <div style="align-self:end">
             <button id="setAtivoBtn">Atualizar</button>
@@ -143,7 +252,7 @@
 
       <details style="margin-top:8px">
         <summary style="cursor:pointer">Repassar saldo (owner)</summary>
-        <div style="margin-top:8px;display:flex;gap:8px">
+        <div style="margin-top:8px;"display:flex"] { flex-wrap: wrap;">
           <button id="repassarBtn">Repassar Saldo</button>
           <button id="checkBalBtn">Checar Saldo do Contrato</button>
         </div>
@@ -162,7 +271,8 @@
 
     </div>
 
-    <footer>Observação: insira valores monetários em ETH — a interface converte para wei automaticamente. Funções administrativas só serão executadas se a conta conectada tiver permissões (owner / prefeitura).</footer>
+    <footer>Observação: insira valores monetários em ETH — a interface converte para wei automaticamente. Funções
+      administrativas só serão executadas se a conta conectada tiver permissões (owner / prefeitura).</footer>
   </div>
 
   <script>
@@ -204,7 +314,7 @@
 
         window.ethereum.on('accountsChanged', handleAccountsChanged);
         window.ethereum.on('chainChanged', handleChainChanged);
-      } catch (e) { status('Erro ao conectar: ' + (e.message||e)); }
+      } catch (e) { status('Erro ao conectar: ' + (e.message || e)); }
     };
 
     loadBtn.onclick = async () => {
@@ -223,42 +333,42 @@
       await refreshMeta();
     };
 
-    async function refreshMeta(){
+    async function refreshMeta() {
       try {
-        const pref = await contract.prefeitura().catch(()=>null);
-        const own = await contract.owner().catch(()=>null);
+        const pref = await contract.prefeitura().catch(() => null);
+        const own = await contract.owner().catch(() => null);
         status(`owner: ${own || '-'}\nprefeitura: ${pref || '-'}\nendereço: ${contractAddress}`);
         document.getElementById('adminCard').style.display = (connectedAddress && (connectedAddress.toLowerCase() === own?.toLowerCase() || connectedAddress.toLowerCase() === pref?.toLowerCase())) ? 'block' : 'none';
-      } catch (e) { status('Erro ao buscar meta: ' + (e.message||e)); }
+      } catch (e) { status('Erro ao buscar meta: ' + (e.message || e)); }
     }
 
-    function status(msg){ document.getElementById('status').textContent = msg; console.log(msg); }
+    function status(msg) { document.getElementById('status').textContent = msg; console.log(msg); }
 
-    function handleAccountsChanged(accounts){
-      if(accounts.length===0){ addrEl.textContent='—'; connectedAddress=null; status('Conta desconectada'); }
+    function handleAccountsChanged(accounts) {
+      if (accounts.length === 0) { addrEl.textContent = '—'; connectedAddress = null; status('Conta desconectada'); }
       else { connectedAddress = accounts[0]; addrEl.textContent = connectedAddress; status('Conta alterada: ' + connectedAddress); }
     }
-    function handleChainChanged(chainId){ status('Chain changed: ' + chainId); }
+    function handleChainChanged(chainId) { status('Chain changed: ' + chainId); }
 
     // ---------- ID helpers ----------
     document.getElementById('makeIdBtn').onclick = async () => {
       const inscr = document.getElementById('inscricao').value.trim();
       const ano = Number(document.getElementById('ano').value);
-      if(!inscr || !ano) return alert('Preencha inscrição e ano');
+      if (!inscr || !ano) return alert('Preencha inscrição e ano');
       try {
-        const id = ethers.utils.solidityKeccak256(['string','uint256'], [inscr, ano]);
+        const id = ethers.utils.solidityKeccak256(['string', 'uint256'], [inscr, ano]);
         document.getElementById('idField').value = id;
         document.getElementById('payId').value = id;
         document.getElementById('setAtivoId').value = id;
         status('ID gerado: ' + id);
-      } catch (e) { status('Erro ao gerar id: ' + (e.message||e)); }
+      } catch (e) { status('Erro ao gerar id: ' + (e.message || e)); }
     };
 
     // ---------- Consultar ----------
     document.getElementById('consultBtn').onclick = async () => {
       try {
         const id = document.getElementById('idField').value.trim();
-        if(!id) return alert('Gere ou cole o id do lançamento');
+        if (!id) return alert('Gere ou cole o id do lançamento');
         const r = await contract.getResumo(id);
         const lista = await contract.listarParcelasPagas(id);
         const texto = [];
@@ -271,132 +381,132 @@
         texto.push('Pagas: ' + r[6]);
         texto.push('ValorPago: ' + ethers.utils.formatEther(r[7]) + ' ETH');
         texto.push('Ativo: ' + r[8]);
-        texto.push('Status parcelas: ' + lista.map((p,i)=>`[${i+1}:${p? '✔' : '✖'}]`).join(' '));
+        texto.push('Status parcelas: ' + lista.map((p, i) => `[${i + 1}:${p ? '✔' : '✖'}]`).join(' '));
         document.getElementById('resumoArea').textContent = texto.join('\n');
         // preencher campos de pagamento automaticamente
         document.getElementById('parcelaVal').value = ethers.utils.formatEther(r[5]);
         document.getElementById('payId').value = id;
-      } catch(e){ console.error(e); alert('Erro na consulta: ' + (e.message||e)); }
+      } catch (e) { console.error(e); alert('Erro na consulta: ' + (e.message || e)); }
     };
 
     // ---------- Pagar ----------
     document.getElementById('fillParcelValue').onclick = async () => {
-      try{
+      try {
         const id = document.getElementById('payId').value.trim();
         const parcela = Number(document.getElementById('parcelaNum').value);
-        if(!id || !parcela) return alert('Preencha id e número da parcela');
+        if (!id || !parcela) return alert('Preencha id e número da parcela');
         const r = await contract.getResumo(id);
         document.getElementById('parcelaVal').value = ethers.utils.formatEther(r[5]);
         status('Valor da parcela preenchido com sucesso');
-      } catch(e){ console.error(e); alert('Erro ao buscar valor da parcela'); }
+      } catch (e) { console.error(e); alert('Erro ao buscar valor da parcela'); }
     };
 
     document.getElementById('payBtn').onclick = async () => {
-      try{
+      try {
         const id = document.getElementById('payId').value.trim();
         const parcela = Number(document.getElementById('parcelaNum').value);
         const val = document.getElementById('parcelaVal').value.trim();
-        if(!id || !parcela || !val) return alert('Preencha id, parcela e valor');
+        if (!id || !parcela || !val) return alert('Preencha id, parcela e valor');
         const valueWei = ethers.utils.parseEther(val);
         const tx = await contract.pagarParcela(id, parcela, { value: valueWei });
         document.getElementById('payStatus').textContent = 'Transação enviada: ' + tx.hash;
         await tx.wait();
         document.getElementById('payStatus').textContent += '\n✅ Confirmada';
-      } catch(e){ console.error(e); alert('Erro no pagamento: ' + (e.message||e)); }
+      } catch (e) { console.error(e); alert('Erro no pagamento: ' + (e.message || e)); }
     };
 
     // ---------- Lançar IPTU (prefeitura) ----------
     document.getElementById('lancarPreviewBtn').onclick = async () => {
-      try{
+      try {
         const inscr = document.getElementById('l_inscricao').value.trim();
         const cont = document.getElementById('l_contribuinte').value.trim();
         const ano = Number(document.getElementById('l_ano').value);
         const parcelas = Number(document.getElementById('l_parcelas').value);
         const totalEth = document.getElementById('l_total').value.trim();
-        if(!inscr || !cont || !ano || !parcelas || !totalEth) return alert('Preencha todos os campos');
+        if (!inscr || !cont || !ano || !parcelas || !totalEth) return alert('Preencha todos os campos');
         const totalWei = ethers.utils.parseEther(totalEth);
         // valida divisão exata localmente (opcional)
-        if(!totalWei.mod(ethers.BigNumber.from(parcelas)).isZero()){
-          if(!confirm('A divisão do total por parcelas não é exata em wei. O contrato rejeitará. Deseja continuar?')) return; 
+        if (!totalWei.mod(ethers.BigNumber.from(parcelas)).isZero()) {
+          if (!confirm('A divisão do total por parcelas não é exata em wei. O contrato rejeitará. Deseja continuar?')) return;
         }
         const id = await contract.callStatic.lancarIPTU(inscr, cont, ano, totalWei, parcelas);
         document.getElementById('lancarStatus').textContent = 'Simulação OK. id previsto: ' + id;
-      } catch(e){ console.error(e); alert('Erro na simulação: ' + (e.message||e)); }
+      } catch (e) { console.error(e); alert('Erro na simulação: ' + (e.message || e)); }
     };
 
     document.getElementById('lancarBtn').onclick = async () => {
-      try{
+      try {
         const inscr = document.getElementById('l_inscricao').value.trim();
         const cont = document.getElementById('l_contribuinte').value.trim();
         const ano = Number(document.getElementById('l_ano').value);
         const parcelas = Number(document.getElementById('l_parcelas').value);
         const totalEth = document.getElementById('l_total').value.trim();
-        if(!inscr || !cont || !ano || !parcelas || !totalEth) return alert('Preencha todos os campos');
-        if(!ethers.utils.isAddress(cont)) return alert('Endereço do contribuinte inválido');
+        if (!inscr || !cont || !ano || !parcelas || !totalEth) return alert('Preencha todos os campos');
+        if (!ethers.utils.isAddress(cont)) return alert('Endereço do contribuinte inválido');
         const totalWei = ethers.utils.parseEther(totalEth);
-        if(!totalWei.mod(ethers.BigNumber.from(parcelas)).isZero()){
-          if(!confirm('A divisão do total por parcelas não é exata em wei. O contrato rejeitará. Deseja continuar?')) return; 
+        if (!totalWei.mod(ethers.BigNumber.from(parcelas)).isZero()) {
+          if (!confirm('A divisão do total por parcelas não é exata em wei. O contrato rejeitará. Deseja continuar?')) return;
         }
         const tx = await contract.lancarIPTU(inscr, cont, ano, totalWei, parcelas);
         document.getElementById('lancarStatus').textContent = 'Tx enviada: ' + tx.hash;
         const rc = await tx.wait();
         // tentar extrair o id retornado (alguns nodes não retornam return value) — pedimos callStatic antes se quiser o id previsível
         document.getElementById('lancarStatus').textContent += '\nConfirmada';
-      } catch(e){ console.error(e); alert('Erro ao lançar IPTU: ' + (e.message||e)); }
+      } catch (e) { console.error(e); alert('Erro ao lançar IPTU: ' + (e.message || e)); }
     };
 
     // ---------- setAtivo ----------
     document.getElementById('setAtivoBtn').onclick = async () => {
-      try{
+      try {
         const id = document.getElementById('setAtivoId').value.trim();
         const val = document.getElementById('setAtivoVal').value === 'true';
-        if(!id) return alert('Informe o id');
+        if (!id) return alert('Informe o id');
         const tx = await contract.setAtivo(id, val);
         document.getElementById('setAtivoStatus').textContent = 'Tx enviada: ' + tx.hash;
         await tx.wait();
         document.getElementById('setAtivoStatus').textContent += '\n✅ Atualizado';
-      } catch(e){ console.error(e); alert('Erro no setAtivo: ' + (e.message||e)); }
+      } catch (e) { console.error(e); alert('Erro no setAtivo: ' + (e.message || e)); }
     };
 
     // ---------- atualizarPrefeitura ----------
     document.getElementById('atualizarPrefBtn').onclick = async () => {
-      try{
+      try {
         const nova = document.getElementById('novaPref').value.trim();
-        if(!ethers.utils.isAddress(nova)) return alert('Endereço inválido');
+        if (!ethers.utils.isAddress(nova)) return alert('Endereço inválido');
         const tx = await contract.atualizarPrefeitura(nova);
         document.getElementById('atualizarPrefStatus').textContent = 'Tx enviada: ' + tx.hash;
         await tx.wait();
         document.getElementById('atualizarPrefStatus').textContent += '\n✅ Prefeitura atualizada';
-      } catch(e){ console.error(e); alert('Erro ao atualizar prefeitura: ' + (e.message||e)); }
+      } catch (e) { console.error(e); alert('Erro ao atualizar prefeitura: ' + (e.message || e)); }
     };
 
     // ---------- repassarSaldo ----------
     document.getElementById('repassarBtn').onclick = async () => {
-      try{
+      try {
         const tx = await contract.repassarSaldo();
         document.getElementById('repassarStatus').textContent = 'Tx enviada: ' + tx.hash;
         await tx.wait();
         document.getElementById('repassarStatus').textContent += '\n✅ Repasse efetuado';
-      } catch(e){ console.error(e); alert('Erro ao repassar saldo: ' + (e.message||e)); }
+      } catch (e) { console.error(e); alert('Erro ao repassar saldo: ' + (e.message || e)); }
     };
 
     document.getElementById('checkBalBtn').onclick = async () => {
-      try{
+      try {
         const bal = await provider.getBalance(contractAddress);
         document.getElementById('repassarStatus').textContent = 'Saldo do contrato: ' + ethers.utils.formatEther(bal) + ' ETH';
-      } catch(e){ console.error(e); alert('Erro ao checar saldo'); }
+      } catch (e) { console.error(e); alert('Erro ao checar saldo'); }
     };
 
     // ---------- transferOwnership ----------
     document.getElementById('transferOwnerBtn').onclick = async () => {
-      try{
+      try {
         const novo = document.getElementById('newOwner').value.trim();
-        if(!ethers.utils.isAddress(novo)) return alert('Endereço inválido');
+        if (!ethers.utils.isAddress(novo)) return alert('Endereço inválido');
         const tx = await contract.transferOwnership(novo);
         document.getElementById('transferOwnerStatus').textContent = 'Tx enviada: ' + tx.hash;
         await tx.wait();
         document.getElementById('transferOwnerStatus').textContent += '\n✅ Ownership transferido';
-      } catch(e){ console.error(e); alert('Erro ao transferir owner: ' + (e.message||e)); }
+      } catch (e) { console.error(e); alert('Erro ao transferir owner: ' + (e.message || e)); }
     };
 
     // Auto-fill contract address field with placeholder
@@ -404,4 +514,5 @@
 
   </script>
 </body>
+
 </html>
