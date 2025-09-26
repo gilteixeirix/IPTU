@@ -138,7 +138,7 @@
     <div class="card">
       <button id="connectBtn">Conectar MetaMask</button>
       <label for="contractAddr">Endereço do contrato</label>
-      <input id="contractAddr" type="text"    placeholder="0x... (cole aqui ou deixe placeholder)" style="width:400px;" />
+      <input id="contractAddr" type="text" placeholder="0x... (cole aqui ou deixe placeholder)" style="width:400px;" />
 
       <div style="margin-top:8px;" display:flex"] { flex-wrap: wrap;">
         <button id="loadBtn">Carregar contrato</button>
@@ -327,12 +327,15 @@
       if (!provider) provider = new ethers.providers.Web3Provider(window.ethereum);
       signer = provider.getSigner();
       contract = new ethers.Contract(contractAddress, ABI, signer);
+
+      if (!contract[1]) return alert('Contrato não localizado');
       status('Contrato carregado: ' + contractAddress);
       await refreshMeta();
     };
 
     refreshMetaBtn.onclick = async () => {
       if (!contract) return status('Carregue o contrato primeiro');
+      if (!contract[1]) return alert('Contrato não localizado');
       await refreshMeta();
     };
 
