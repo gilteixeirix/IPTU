@@ -411,6 +411,7 @@
         const val = document.getElementById('parcelaVal').value.trim();
         if (!id || !parcela || !val) return alert('Preencha id, parcela e valor');
 
+        if (r[1] != addrEl.textContent) return alert('Conta logada não é do contribuinte');
 
         const valueWei = ethers.utils.parseEther(val);
         const tx = await contract.pagarParcela(id, parcela, { value: valueWei });
