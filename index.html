@@ -312,6 +312,7 @@
         signer = provider.getSigner();
         connectedAddress = await signer.getAddress();
         addrEl.textContent = connectedAddress;
+
         status('MetaMask conectado: ' + connectedAddress);
 
         window.ethereum.on('accountsChanged', handleAccountsChanged);
@@ -410,7 +411,7 @@
         const val = document.getElementById('parcelaVal').value.trim();
         if (!id || !parcela || !val) return alert('Preencha id, parcela e valor');
         const r = await contract.getResumo(id);
-        if (r[1] || connectedAddress) return alert('Conta logada não é do contribuinte');
+        if (r[1] || addrEl.textContent) return alert('Conta logada não é do contribuinte');
 
         const valueWei = ethers.utils.parseEther(val);
         const tx = await contract.pagarParcela(id, parcela, { value: valueWei });
