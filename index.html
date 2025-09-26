@@ -139,7 +139,7 @@
       <button id="connectBtn">Conectar MetaMask</button>
       <label for="contractAddr">Endereço do contrato</label>
       <input id="contractAddr" type="text" placeholder="0x... (cole aqui ou deixe placeholder)" />
-      
+
       <div style="margin-top:8px;" display:flex"] { flex-wrap: wrap;">
         <button id="loadBtn">Carregar contrato</button>
         <button id="refreshMetaBtn">Atualizar dados</button>
@@ -409,8 +409,9 @@
         const parcela = Number(document.getElementById('parcelaNum').value);
         const val = document.getElementById('parcelaVal').value.trim();
         if (!id || !parcela || !val) return alert('Preencha id, parcela e valor');
-         const r = await contract.getResumo(id);
-        if (r[1] || connectedAddress.addrEl) return alert('Conta logada não é do contribuinte');
+        const r = await contract.getResumo(id);
+        if (r[1] || connectedAddress) return alert('Conta logada não é do contribuinte');
+
         const valueWei = ethers.utils.parseEther(val);
         const tx = await contract.pagarParcela(id, parcela, { value: valueWei });
         document.getElementById('payStatus').textContent = 'Transação enviada: ' + tx.hash;
