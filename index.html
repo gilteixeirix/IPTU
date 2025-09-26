@@ -328,14 +328,14 @@
       signer = provider.getSigner();
       contract = new ethers.Contract(contractAddress, ABI, signer);
 
-      if (!contract[1]) return alert('Contrato não localizado');
+      if (!contract.prefeitura) return alert('Contrato não localizado');
       status('Contrato carregado: ' + contractAddress);
       await refreshMeta();
     };
 
     refreshMetaBtn.onclick = async () => {
       if (!contract) return status('Carregue o contrato primeiro');
-      if (!contract[1]) return alert('Contrato não localizado');
+      if (!contract.prefeitura) return alert('Contrato não localizado');
       await refreshMeta();
     };
 
