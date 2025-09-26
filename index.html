@@ -349,7 +349,10 @@
 
     function handleAccountsChanged(accounts) {
       if (accounts.length === 0) { addrEl.textContent = '—'; connectedAddress = null; status('Conta desconectada'); }
-      else { connectedAddress = accounts[0]; addrEl.textContent = connectedAddress; status('Conta alterada: ' + connectedAddress); }
+      else {
+        document.getElementById('connectBtn').click();
+        ; connectedAddress = accounts[0]; addrEl.textContent = connectedAddress; status('Conta alterada: ' + connectedAddress);
+      }
     }
     function handleChainChanged(chainId) { status('Chain changed: ' + chainId); }
 
