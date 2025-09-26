@@ -139,7 +139,7 @@
       <button id="connectBtn">Conectar MetaMask</button>
       <label for="contractAddr">Endereço do contrato</label>
       <input id="contractAddr" placeholder="0x... (cole aqui ou deixe placeholder)" />
-      <div style="margin-top:8px;"display:flex"] { flex-wrap: wrap;">
+      <div style="margin-top:8px;" display:flex"] { flex-wrap: wrap;">
         <button id="loadBtn">Carregar contrato</button>
         <button id="refreshMetaBtn">Atualizar dados</button>
       </div>
@@ -156,15 +156,16 @@
         </div>
         <div>
           <label>Ano</label>
-          <input id="ano"   placeholder="2025" />
+          <input id="ano" placeholder="2025" />
         </div>
-      </div>
-      <div style="margin-top:8px;"display:flex"] { flex-wrap: wrap;">
-        <button id="makeIdBtn">Gerar ID (keccak256)</button>
-        <button id="consultBtn">Consultar getResumo + listarParcelas</button>
       </div>
       <label>ID (bytes32)</label>
       <input id="idField" placeholder="0x..." />
+      <div style="margin-top:8px;" display:flex"] { flex-wrap: wrap;">
+        <button id="makeIdBtn">Gerar ID Lançamento(keccak256)</button>
+        <button id="consultBtn">Consultar getResumo + listarParcelas</button>
+      </div>
+
       <div class="result" id="resumoArea">—</div>
     </div>
 
@@ -176,14 +177,14 @@
       <div class="row">
         <div>
           <label>Nº da parcela</label>
-          <input id="parcelaNum"   placeholder="1" />
+          <input id="parcelaNum" placeholder="1" />
         </div>
         <div>
           <label>Valor (ETH)</label>
           <input id="parcelaVal" placeholder="ex: 0.1" />
         </div>
       </div>
-      <div style="margin-top:8px;"display:flex"] { flex-wrap: wrap;">
+      <div style="margin-top:8px;" display:flex"] { flex-wrap: wrap;">
         <button id="fillParcelValue">Buscar valor oficial</button>
         <button id="payBtn">Pagar Parcela</button>
       </div>
@@ -213,7 +214,7 @@
           </div>
           <label>Total (ETH)</label>
           <input id="l_total" placeholder="ex: 1.5 (ETH)" />
-          <div style="margin-top:8px;"display:flex"] { flex-wrap: wrap;">
+          <div style="margin-top:8px;" display:flex"] { flex-wrap: wrap;">
             <button id="lancarBtn">Lançar IPTU</button>
             <button id="lancarPreviewBtn">Simular (callStatic) e mostrar ID</button>
           </div>
@@ -252,7 +253,7 @@
 
       <details style="margin-top:8px">
         <summary style="cursor:pointer">Repassar saldo (owner)</summary>
-        <div style="margin-top:8px;"display:flex"] { flex-wrap: wrap;">
+        <div style="margin-top:8px;" display:flex"] { flex-wrap: wrap;">
           <button id="repassarBtn">Repassar Saldo</button>
           <button id="checkBalBtn">Checar Saldo do Contrato</button>
         </div>
