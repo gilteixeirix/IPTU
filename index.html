@@ -341,11 +341,11 @@
       try {
         const pref = await contract.prefeitura().catch(() => null);
         const own = await contract.owner().catch(() => null);
-             if ( pref == null    ) return status('Contrato não encontrado na rede ');
+        if (pref == null) return status('Contrato não encontrado na rede  ');
         status(`owner: ${own || '-'}\nprefeitura: ${pref || '-'}\nendereço: ${contractAddress}`);
         document.getElementById('adminCard').style.display = (connectedAddress && (connectedAddress.toLowerCase() === own?.toLowerCase() || connectedAddress.toLowerCase() === pref?.toLowerCase())) ? 'block' : 'none';
       } catch (e) { status('Erro ao buscar meta: ' + (e.message || e)); }
-   
+
     }
 
     function status(msg) { document.getElementById('status').textContent = msg; console.log(msg); }
