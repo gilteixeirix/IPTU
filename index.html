@@ -58,6 +58,7 @@
 
     input[type=text],
     input[type=number],
+
     textarea,
     select {
       width: 100%;
@@ -132,13 +133,17 @@
   <div class="wrap">
     <header>
       <h1>Lançamento de IPTU Chain</h1>
+      <button id="connectBtn">Conectar MetaMask</button>
       <div class="muted">Conta: <span id="addr">—</span></div>
     </header>
 
     <div class="card">
-      <button id="connectBtn">Conectar MetaMask</button>
-      <label for="contractAddr">Endereço do contrato</label>
-      <input id="contractAddr" type="text" placeholder="0x... (cole aqui ou deixe placeholder)" style="width:400px;" />
+
+      <div style="display:flex; align-items:center; gap:10px;">
+        <label for="contractAddr">Endereço do contrato</label>
+
+        <input id="contractAddr" type="text" placeholder="0x..." style="width:500px; height:28px; margin-top:20px;" />
+      </div>
 
       <div style="margin-top:8px;" display:flex"] { flex-wrap: wrap;">
         <button id="loadBtn">Carregar contrato</button>
@@ -160,14 +165,16 @@
           <input id="ano" placeholder="2025" />
         </div>
       </div>
-      <label>ID (bytes32)</label>
-      <input id="idField" type="text" placeholder="0x..." style="width:500px;" />
+      <div style="display:flex; align-items:center; gap:10px;">
+        <label>ID (bytes32)</label>
+        <input id="idField" type="text" placeholder="0x..." style="width:500px; height:28px; margin-top:20px;" />
+      </div>
       <div style="margin-top:8px;" display:flex"] { flex-wrap: wrap;">
         <button id="makeIdBtn">Gerar ID Lançamento(keccak256)</button>
-        <button id="consultBtn">Consultar  Resumo </button>
+        <button id="consultBtn">Consultar Resumo </button>
       </div>
 
-      <div class="result" id="resumoArea">—</div>
+
     </div>
 
     <!-- Pagamento -->
@@ -189,7 +196,7 @@
         <button id="fillParcelValue">Buscar valor oficial</button>
         <button id="payBtn">Pagar Parcela</button>
       </div>
-      <div class="result" id="payStatus">—</div>
+ 
     </div>
 
     <!-- Admin: Lancar, setAtivo, atualizarPrefeitura -->
@@ -219,7 +226,7 @@
             <button id="lancarBtn">Lançar IPTU</button>
             <button id="lancarPreviewBtn">Simular (callStatic) e mostrar ID</button>
           </div>
-          <div class="result" id="lancarStatus">—</div>
+   
         </div>
       </details>
 
@@ -239,7 +246,7 @@
             <button id="setAtivoBtn">Atualizar</button>
           </div>
         </div>
-        <div class="result" id="setAtivoStatus">—</div>
+ 
       </details>
 
       <details style="margin-top:8px">
@@ -249,7 +256,7 @@
         <div style="margin-top:8px">
           <button id="atualizarPrefBtn">Atualizar Prefeitura</button>
         </div>
-        <div class="result" id="atualizarPrefStatus">—</div>
+  
       </details>
 
       <details style="margin-top:8px">
@@ -258,7 +265,7 @@
           <button id="repassarBtn">Repassar Saldo</button>
           <button id="checkBalBtn">Checar Saldo do Contrato</button>
         </div>
-        <div class="result" id="repassarStatus">—</div>
+ 
       </details>
 
       <details style="margin-top:8px">
@@ -268,7 +275,7 @@
         <div style="margin-top:8px">
           <button id="transferOwnerBtn">Transferir Owner</button>
         </div>
-        <div class="result" id="transferOwnerStatus">—</div>
+ 
       </details>
 
     </div>
