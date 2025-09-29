@@ -453,6 +453,7 @@
         if (!totalWei.mod(ethers.BigNumber.from(parcelas)).isZero()) {
           if (!confirm('A divisão do total por parcelas não é exata em wei. O contrato rejeitará. Deseja continuar?')) return;
         }
+        if (contract.prefeitura != addrEl.textContent) return alert('Conta logada não é do contribuinte');
         const id = await contract.callStatic.lancarIPTU(inscr, cont, ano, totalWei, parcelas);
         document.getElementById('lancarStatus').textContent = 'Simulação OK. id previsto: ' + id;
       } catch (e) { console.error(e); alert('Erro na simulação: ' + (e.message || e)); }
