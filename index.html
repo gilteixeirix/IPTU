@@ -365,7 +365,7 @@
       if (accounts.length === 0) { addrEl.textContent = '—'; connectedAddress = null; status('Conta desconectada'); }
       else {
         ; connectedAddress = accounts[0]; addrEl.textContent = connectedAddress; status('Conta alterada: ' + connectedAddress); document.getElementById('connectBtn').click();
-        await refreshMeta();
+        refreshMeta();
       }
     }
     function handleChainChanged(chainId) { status('Chain changed: ' + chainId); }
