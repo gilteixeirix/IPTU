@@ -428,7 +428,9 @@
         if (!id || !parcela || !val) return alert('Preencha id, parcela e valor');
         const r = await contract.getResumo(id);
         if (r[1] != addrEl.textContent) return alert('Conta logada não é do contribuinte');
-        if ((ethers.utils.formatEther(r[3]) + ' ETH') === ethers.utils.formatEther(r[7]) + ' ETH') return alert('Lançamento já foi quitado');
+        if (r[3] === r[7]) return alert('Lançamento já foi quitado');
+     
+
         const valueWei = ethers.utils.parseEther(val);
         const tx = await contract.pagarParcela(id, parcela, { value: valueWei });
         document.getElementById('payStatus').textContent = 'Transação enviada: ' + tx.hash;
