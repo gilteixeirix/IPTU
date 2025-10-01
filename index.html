@@ -146,7 +146,8 @@
 
       </div>
 
-      <div style="margin-top:8px;" display:flex"] { flex-wrap: wrap;">
+      <div style="margin-top:8px; display:flex; flex-wrap:wrap;">
+
         <button id="loadBtn">Carregar contrato</button>
         <button id="refreshMetaBtn">Atualizar dados</button>
       </div>
@@ -316,20 +317,24 @@
     const addrEl = document.getElementById('addr');
 
     connectBtn.onclick = async () => {
-      if (!window.ethereum) return alert('MetaMask não detectado');
+      if (!window.ethereum) {
+        alert('MetaMask não detectado. Instale/ative a extensão.');
+        return;
+      }
       try {
+        await window.ethereum.request({ method: 'eth_requestAccounts' });
         provider = new ethers.providers.Web3Provider(window.ethereum);
-        await provider.send('eth_requestAccounts', []);
         signer = provider.getSigner();
-        connectedAddress = await signer.getAddress();
-        addrEl.textContent = connectedAddress;
-
-        status('MetaMask conectado: ' + connectedAddress);
-
+        const address = await signer.getAddress();
+        mmStatus.textContent = address;
+        status('Conectado: ' + shorten(address));
+        // listen for chain/account changes
         window.ethereum.on('accountsChanged', handleAccountsChanged);
         window.ethereum.on('chainChanged', handleChainChanged);
-      } catch (e) { status('Erro ao conectar: ' + (e.message || e)); }
-    };
+      } catch (err) {
+        status('Erro ao conectar: ' + (err.message || err));
+      }
+    }
 
     loadBtn.onclick = async () => {
       const addrInput = document.getElementById('contractAddr').value.trim();
@@ -429,7 +434,7 @@
         if (!id || !parcela || !val) return alert('Preencha id, parcela e valor');
         const r = await contract.getResumo(id);
         if (r[1] != addrEl.textContent) return alert('Conta logada não é do contribuinte');
-        if (r[3].eq(r[7]))  return alert('Lançamento já foi quitado');
+        if (r[3].eq(r[7])) return alert('Lançamento já foi quitado');
 
 
         const valueWei = ethers.utils.parseEther(val);
@@ -539,6 +544,72 @@
     document.getElementById('contractAddr').value = contractAddress === '0xREPLACE_CONTRACT_ADDRESS' ? '' : contractAddress;
 
   </script>
+  <style>
+  #guiaModal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.6);
+    justify-content: center;
+    align-items: center;
+  }
+  #guiaContent {
+    background: #fff;
+    padding: 20px;
+    border-radius: 12px;
+    width: 400px;
+    text-align: center;
+    box-shadow: 0 0 15px rgba(0,0,0,0.3);
+  }
+  #guiaContent h2 { margin-bottom: 10px; }
+  #barcode { margin-top: 15px; }
+</style>
+
+<button onclick="gerarGuia()">Gerar Guia com Código de Barras</button>
+
+<div id="guiaModal">
+  <div id="guiaContent">
+    <h2>Guia de Pagamento IPTU</h2>
+    <p><b>Inscrição:</b> 12345-6</p>
+    <p><b>Ano:</b> 2025</p>
+    <p><b>Parcela:</b> 1/12</p>
+    <p><b>Valor:</b> R$ 250,00</p>
+
+    <canvas id="barcode" width="350" height="80"></canvas>
+    <p id="barcodeNum"></p>
+
+    <button onclick="fecharGuia()">Fechar</button>
+  </div>
+</div>
+
+<script>
+function gerarGuia() {
+  const modal = document.getElementById("guiaModal");
+  modal.style.display = "flex";
+
+  // Simula número do código de barras
+  const codigo = "846700000012502300420009123456202500000001";
+  document.getElementById("barcodeNum").innerText = codigo;
+
+  // Desenha barras no canvas
+  const canvas = document.getElementById("barcode");
+  const ctx = canvas.getContext("2d");
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  ctx.fillStyle = "#000";
+  for (let i = 0; i < codigo.length; i++) {
+    if (parseInt(codigo[i]) % 2 === 0) {
+      ctx.fillRect(10 + i * 6, 10, 3, 60);
+    }
+  }
+}
+
+function fecharGuia() {
+  document.getElementById("guiaModal").style.display = "none";
+}
+</script>
+
 </body>
 
 </html>
