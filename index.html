@@ -34,7 +34,6 @@
       align-items: center
     }
 
-
     h1 {
       color: #fff;
       margin: 0;
@@ -58,7 +57,6 @@
 
     input[type=text],
     input[type=number],
-
     textarea,
     select {
       width: 100%;
@@ -133,21 +131,19 @@
   <div class="wrap">
     <header>
       <h1>Lançamento de IPTU Chain</h1>
-      <button id="connectBtn">Conectar MetaMask</button>
-      <div class="muted">Conta: <span id="addr">—</span></div>
+      <div style="display:flex; align-items:center; gap:10px;">
+        <button id="connectBtn">Conectar MetaMask</button>
+        <div class="muted">Conta: <span id="addr">—</span></div>
+      </div>
     </header>
 
     <div class="card">
-
       <div style="display:flex; align-items:center; gap:10px;">
         <label for="contractAddr">Endereço do contrato</label>
-
         <input id="contractAddr" type="text" placeholder="0x..." style="width:500px; height:28px; margin-top:20px;" />
-
       </div>
 
-      <div style="margin-top:8px; display:flex; flex-wrap:wrap;">
-
+      <div style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap;">
         <button id="loadBtn">Carregar contrato</button>
         <button id="refreshMetaBtn">Atualizar dados</button>
       </div>
@@ -167,16 +163,13 @@
           <input id="ano" placeholder="2025" />
         </div>
       </div>
-      <div style="display:flex; align-items:center; gap:10px;">
+      <div style="display:flex; align-items:center; gap:10px; margin-top:8px;">
         <label>ID (bytes32)</label>
-
-        <input id="idField" type="text" placeholder="0x..." style="width:500px; height:28px; margin-top:20px;" />
-
-
+        <input id="idField" type="text" placeholder="0x..." style="width:500px; height:28px; margin-top:0;" />
       </div>
-      <div style="margin-top:8px;" display:flex"] { flex-wrap: wrap;">
-        <button id="makeIdBtn">Gerar ID Lançamento(keccak256)</button>
-        <button id="consultBtn">Consultar Resumo </button>
+      <div style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap;">
+        <button id="makeIdBtn">Gerar ID Lançamento (keccak256)</button>
+        <button id="consultBtn">Consultar Resumo</button>
       </div>
 
       <div class="result" id="resumoArea">—</div>
@@ -197,7 +190,7 @@
           <input id="parcelaVal" placeholder="ex: 0.1" />
         </div>
       </div>
-      <div style="margin-top:8px;" display:flex"] { flex-wrap: wrap;">
+      <div style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap;">
         <button id="fillParcelValue">Buscar valor oficial</button>
         <button id="payBtn">Pagar Parcela</button>
       </div>
@@ -227,7 +220,7 @@
           </div>
           <label>Total (ETH)</label>
           <input id="l_total" placeholder="ex: 1.5 (ETH)" />
-          <div style="margin-top:8px;" display:flex"] { flex-wrap: wrap;">
+          <div style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap;">
             <button id="lancarBtn">Lançar IPTU</button>
             <button id="lancarPreviewBtn">Simular (callStatic) e mostrar ID</button>
           </div>
@@ -266,7 +259,7 @@
 
       <details style="margin-top:8px">
         <summary style="cursor:pointer">Repassar saldo (owner)</summary>
-        <div style="margin-top:8px;" display:flex"] { flex-wrap: wrap;">
+        <div style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap;">
           <button id="repassarBtn">Repassar Saldo</button>
           <button id="checkBalBtn">Checar Saldo do Contrato</button>
         </div>
@@ -285,8 +278,7 @@
 
     </div>
 
-    <footer>Observação: insira valores monetários em ETH — a interface converte para wei automaticamente. Funções
-      administrativas só serão executadas se a conta conectada tiver permissões (owner / prefeitura).</footer>
+    <footer>Observação: insira valores monetários em ETH — a interface converte para wei automaticamente. Funções administrativas só serão executadas se a conta conectada tiver permissões (owner / prefeitura).</footer>
   </div>
 
   <script>
@@ -305,47 +297,132 @@
       "function transferOwnership(address novoOwner)"
     ];
 
-    // Substitua o valor abaixo pelo endereço do contrato deployado ou cole no campo na UI
-    let contractAddress = "0xREPLACE_CONTRACT_ADDRESS";
+    // Substitua o valor abaixo pelo endereço do contrato deployado
+    // ou cole no campo na UI. Será persistido em localStorage.
+    let contractAddress = localStorage.getItem('iptu_contract') || '';
 
-    let provider, signer, contract, connectedAddress;
+    let provider = null;
+    let signer = null;
+    let contract = null;
+    let connectedAddress = null;
 
     const connectBtn = document.getElementById('connectBtn');
     const loadBtn = document.getElementById('loadBtn');
     const refreshMetaBtn = document.getElementById('refreshMetaBtn');
     const statusEl = document.getElementById('status');
     const addrEl = document.getElementById('addr');
+    const contractAddrInput = document.getElementById('contractAddr');
 
+    // prefill contract address field from localStorage
+    document.getElementById('contractAddr').value = contractAddress;
+
+    function status(msg) {
+      document.getElementById('status').textContent = msg;
+      console.log(msg);
+    }
+
+    // Handle connect
     connectBtn.onclick = async () => {
       if (!window.ethereum) {
         alert('MetaMask não detectado. Instale/ative a extensão.');
         return;
       }
       try {
-        await window.ethereum.request({ method: 'eth_requestAccounts' });
+        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+        if (!accounts || accounts.length === 0) {
+          status('Nenhuma conta retornada.');
+          return;
+        }
         provider = new ethers.providers.Web3Provider(window.ethereum);
         signer = provider.getSigner();
-        const address = await signer.getAddress();
-        mmStatus.textContent = address;
-        status('Conectado: ' + shorten(address));
+        connectedAddress = accounts[0];
+        addrEl.textContent = connectedAddress;
+        status('Conectado: ' + shorten(connectedAddress));
         // listen for chain/account changes
-        window.ethereum.on('accountsChanged', handleAccountsChanged);
-        window.ethereum.on('chainChanged', handleChainChanged);
+        window.ethereum.removeListener('accountsChanged', handleAccountsChangedSafe);
+        window.ethereum.removeListener('chainChanged', handleChainChangedSafe);
+        window.ethereum.on('accountsChanged', handleAccountsChangedSafe);
+        window.ethereum.on('chainChanged', handleChainChangedSafe);
+        // if contract already loaded, refresh meta with signer
+        if (contractAddress && ethers.utils.isAddress(contractAddress)) {
+          contract = new ethers.Contract(contractAddress, ABI, signer);
+          await refreshMeta();
+        }
       } catch (err) {
         status('Erro ao conectar: ' + (err.message || err));
+        console.error(err);
+      }
+    };
+
+    // Safe wrappers for handlers
+    function handleAccountsChangedSafe(accounts) {
+      try {
+        handleAccountsChanged(accounts);
+      } catch (e) { console.error(e); }
+    }
+    function handleChainChangedSafe(chainId) {
+      try {
+        handleChainChanged(chainId);
+      } catch (e) { console.error(e); }
+    }
+
+    function handleAccountsChanged(accounts) {
+      if (!accounts || accounts.length === 0) {
+        addrEl.textContent = '—';
+        connectedAddress = null;
+        status('Conta desconectada');
+        document.getElementById('adminCard').style.display = 'none';
+      } else {
+        connectedAddress = accounts[0];
+        addrEl.textContent = connectedAddress;
+        status('Conta alterada: ' + connectedAddress);
+        // update signer and contract if provider exists
+        if (provider) {
+          signer = provider.getSigner();
+          if (contractAddress && ethers.utils.isAddress(contractAddress)) {
+            contract = new ethers.Contract(contractAddress, ABI, signer);
+            refreshMeta();
+          }
+        }
       }
     }
 
+    function handleChainChanged(chainId) {
+      // recommended to reload the page on chain change for dapps, but we just notify
+      status('Chain changed: ' + chainId + ' (se necessário, recarregue a página)');
+    }
+
+    // ---------- Helpers ----------
+    function shorten(addr) {
+      if (!addr) return '—';
+      return addr.slice(0, 6) + '…' + addr.slice(-4);
+    }
+
+    // ---------- Load / refresh ----------
     loadBtn.onclick = async () => {
       const addrInput = document.getElementById('contractAddr').value.trim();
-      if (addrInput) contractAddress = addrInput;
-      if (!ethers.utils.isAddress(contractAddress)) { status('Endereço do contrato inválido.'); return; }
-      if (!provider) provider = new ethers.providers.Web3Provider(window.ethereum);
-      signer = provider.getSigner();
-      contract = new ethers.Contract(contractAddress, ABI, signer);
+      if (!addrInput) {
+        return status('Informe o endereço do contrato antes de carregar.');
+      }
+      if (!ethers.utils.isAddress(addrInput)) {
+        return status('Endereço do contrato inválido.');
+      }
+      contractAddress = addrInput;
+      localStorage.setItem('iptu_contract', contractAddress);
+
+      if (!provider) {
+        // try to create provider if MetaMask present
+        if (window.ethereum) {
+          provider = new ethers.providers.Web3Provider(window.ethereum);
+          signer = provider.getSigner();
+        } else {
+          return status('Nenhum provider disponível. Conecte MetaMask primeiro.');
+        }
+      }
+
+      contract = new ethers.Contract(contractAddress, ABI, signer || provider);
       status('Contrato carregado: ' + contractAddress);
       await refreshMeta();
-
     };
 
     refreshMetaBtn.onclick = async () => {
@@ -357,23 +434,21 @@
       try {
         const pref = await contract.prefeitura().catch(() => null);
         const own = await contract.owner().catch(() => null);
-        if (pref == null) return status('Contrato não encontrado na rede  ');
+        if (pref == null && own == null) {
+          status('Contrato não encontrado ou métodos inacessíveis na rede/ABI fornecida.');
+          document.getElementById('adminCard').style.display = 'none';
+          return;
+        }
         status(`owner: ${own || '-'}\nprefeitura: ${pref || '-'}\nendereço: ${contractAddress}`);
-        document.getElementById('adminCard').style.display = (connectedAddress && (connectedAddress.toLowerCase() === own?.toLowerCase() || connectedAddress.toLowerCase() === pref?.toLowerCase())) ? 'block' : 'none';
-      } catch (e) { status('Erro ao buscar meta: ' + (e.message || e)); }
-
-    }
-
-    function status(msg) { document.getElementById('status').textContent = msg; console.log(msg); }
-
-    function handleAccountsChanged(accounts) {
-      if (accounts.length === 0) { addrEl.textContent = '—'; connectedAddress = null; status('Conta desconectada'); }
-      else {
-        ; connectedAddress = accounts[0]; addrEl.textContent = connectedAddress; status('Conta alterada: ' + connectedAddress); document.getElementById('connectBtn').click();
-        refreshMeta();
+        // exibir adminCard se a conta conectada for owner ou prefeitura
+        const lowerConnected = connectedAddress ? connectedAddress.toLowerCase() : null;
+        const isAdmin = lowerConnected && ((own && own.toLowerCase() === lowerConnected) || (pref && pref.toLowerCase() === lowerConnected));
+        document.getElementById('adminCard').style.display = isAdmin ? 'block' : 'none';
+      } catch (e) {
+        status('Erro ao buscar meta: ' + (e.message || e));
+        console.error(e);
       }
     }
-    function handleChainChanged(chainId) { status('Chain changed: ' + chainId); }
 
     // ---------- ID helpers ----------
     document.getElementById('makeIdBtn').onclick = async () => {
@@ -386,12 +461,16 @@
         document.getElementById('payId').value = id;
         document.getElementById('setAtivoId').value = id;
         status('ID gerado: ' + id);
-      } catch (e) { status('Erro ao gerar id: ' + (e.message || e)); }
+      } catch (e) {
+        status('Erro ao gerar id: ' + (e.message || e));
+        console.error(e);
+      }
     };
 
     // ---------- Consultar ----------
     document.getElementById('consultBtn').onclick = async () => {
       try {
+        if (!contract) return alert('Carregue o contrato primeiro');
         const id = document.getElementById('idField').value.trim();
         if (!id) return alert('Gere ou cole o id do lançamento');
         const r = await contract.getResumo(id);
@@ -411,43 +490,57 @@
         // preencher campos de pagamento automaticamente
         document.getElementById('parcelaVal').value = ethers.utils.formatEther(r[5]);
         document.getElementById('payId').value = id;
-      } catch (e) { console.error(e); alert('Erro na consulta: ' + (e.message || e)); }
+      } catch (e) {
+        console.error(e);
+        alert('Erro na consulta: ' + (e.message || e));
+      }
     };
 
     // ---------- Pagar ----------
     document.getElementById('fillParcelValue').onclick = async () => {
       try {
+        if (!contract) return alert('Carregue o contrato primeiro');
         const id = document.getElementById('payId').value.trim();
         const parcela = Number(document.getElementById('parcelaNum').value);
         if (!id || !parcela) return alert('Preencha id e número da parcela');
         const r = await contract.getResumo(id);
         document.getElementById('parcelaVal').value = ethers.utils.formatEther(r[5]);
         status('Valor da parcela preenchido com sucesso');
-      } catch (e) { console.error(e); alert('Erro ao buscar valor da parcela'); }
+      } catch (e) {
+        console.error(e);
+        alert('Erro ao buscar valor da parcela: ' + (e.message || e));
+      }
     };
 
     document.getElementById('payBtn').onclick = async () => {
       try {
+        if (!contract) return alert('Carregue o contrato primeiro');
         const id = document.getElementById('payId').value.trim();
         const parcela = Number(document.getElementById('parcelaNum').value);
         const val = document.getElementById('parcelaVal').value.trim();
         if (!id || !parcela || !val) return alert('Preencha id, parcela e valor');
         const r = await contract.getResumo(id);
-        if (r[1] != addrEl.textContent) return alert('Conta logada não é do contribuinte');
+        const contrib = (r[1] || '').toLowerCase();
+        const logged = (addrEl.textContent || '').toLowerCase();
+        if (contrib !== logged) return alert('Conta logada não é do contribuinte');
         if (r[3].eq(r[7])) return alert('Lançamento já foi quitado');
 
-
         const valueWei = ethers.utils.parseEther(val);
+        document.getElementById('payStatus').textContent = '⏳ Transação sendo enviada...';
         const tx = await contract.pagarParcela(id, parcela, { value: valueWei });
         document.getElementById('payStatus').textContent = 'Transação enviada: ' + tx.hash;
         await tx.wait();
         document.getElementById('payStatus').textContent += '\n✅ Confirmada';
-      } catch (e) { console.error(e); alert('Erro no pagamento: ' + (e.message || e)); }
+      } catch (e) {
+        console.error(e);
+        alert('Erro no pagamento: ' + (e.message || e));
+      }
     };
 
     // ---------- Lançar IPTU (prefeitura) ----------
     document.getElementById('lancarPreviewBtn').onclick = async () => {
       try {
+        if (!contract) return alert('Carregue o contrato primeiro');
         const inscr = document.getElementById('l_inscricao').value.trim();
         const cont = document.getElementById('l_contribuinte').value.trim();
         const ano = Number(document.getElementById('l_ano').value);
@@ -457,16 +550,20 @@
         const totalWei = ethers.utils.parseEther(totalEth);
         // valida divisão exata localmente (opcional)
         if (!totalWei.mod(ethers.BigNumber.from(parcelas)).isZero()) {
-          if (!confirm('A divisão do total por parcelas não é exata em wei. O contrato rejeitará. Deseja continuar?')) return;
+          if (!confirm('A divisão do total por parcelas não é exata em wei. O contrato pode rejeitar. Deseja continuar?')) return;
         }
 
         const id = await contract.callStatic.lancarIPTU(inscr, cont, ano, totalWei, parcelas);
         document.getElementById('lancarStatus').textContent = 'Simulação OK. id previsto: ' + id;
-      } catch (e) { console.error(e); alert('Erro na simulação: ' + (e.message || e)); }
+      } catch (e) {
+        console.error(e);
+        alert('Erro na simulação: ' + (e.message || e));
+      }
     };
 
     document.getElementById('lancarBtn').onclick = async () => {
       try {
+        if (!contract) return alert('Carregue o contrato primeiro');
         const inscr = document.getElementById('l_inscricao').value.trim();
         const cont = document.getElementById('l_contribuinte').value.trim();
         const ano = Number(document.getElementById('l_ano').value);
@@ -476,75 +573,101 @@
         if (!ethers.utils.isAddress(cont)) return alert('Endereço do contribuinte inválido');
         const totalWei = ethers.utils.parseEther(totalEth);
         if (!totalWei.mod(ethers.BigNumber.from(parcelas)).isZero()) {
-          if (!confirm('A divisão do total por parcelas não é exata em wei. O contrato rejeitará. Deseja continuar?')) return;
+          if (!confirm('A divisão do total por parcelas não é exata em wei. O contrato pode rejeitar. Deseja continuar?')) return;
         }
+        document.getElementById('lancarStatus').textContent = '⏳ Enviando transação...';
         const tx = await contract.lancarIPTU(inscr, cont, ano, totalWei, parcelas);
         document.getElementById('lancarStatus').textContent = 'Tx enviada: ' + tx.hash;
-        const rc = await tx.wait();
-        // tentar extrair o id retornado (alguns nodes não retornam return value) — pedimos callStatic antes se quiser o id previsível
-        document.getElementById('lancarStatus').textContent += '\nConfirmada';
-      } catch (e) { console.error(e); alert('Erro ao lançar IPTU: ' + (e.message || e)); }
+        await tx.wait();
+        document.getElementById('lancarStatus').textContent += '\n✅ Confirmada';
+      } catch (e) {
+        console.error(e);
+        alert('Erro ao lançar IPTU: ' + (e.message || e));
+      }
     };
 
     // ---------- setAtivo ----------
     document.getElementById('setAtivoBtn').onclick = async () => {
       try {
+        if (!contract) return alert('Carregue o contrato primeiro');
         const id = document.getElementById('setAtivoId').value.trim();
         const val = document.getElementById('setAtivoVal').value === 'true';
         if (!id) return alert('Informe o id');
+        document.getElementById('setAtivoStatus').textContent = '⏳ Enviando...';
         const tx = await contract.setAtivo(id, val);
         document.getElementById('setAtivoStatus').textContent = 'Tx enviada: ' + tx.hash;
         await tx.wait();
         document.getElementById('setAtivoStatus').textContent += '\n✅ Atualizado';
-      } catch (e) { console.error(e); alert('Erro no setAtivo: ' + (e.message || e)); }
+      } catch (e) {
+        console.error(e);
+        alert('Erro no setAtivo: ' + (e.message || e));
+      }
     };
 
     // ---------- atualizarPrefeitura ----------
     document.getElementById('atualizarPrefBtn').onclick = async () => {
       try {
+        if (!contract) return alert('Carregue o contrato primeiro');
         const nova = document.getElementById('novaPref').value.trim();
         if (!ethers.utils.isAddress(nova)) return alert('Endereço inválido');
+        document.getElementById('atualizarPrefStatus').textContent = '⏳ Enviando...';
         const tx = await contract.atualizarPrefeitura(nova);
         document.getElementById('atualizarPrefStatus').textContent = 'Tx enviada: ' + tx.hash;
         await tx.wait();
         document.getElementById('atualizarPrefStatus').textContent += '\n✅ Prefeitura atualizada';
-      } catch (e) { console.error(e); alert('Erro ao atualizar prefeitura: ' + (e.message || e)); }
+      } catch (e) {
+        console.error(e);
+        alert('Erro ao atualizar prefeitura: ' + (e.message || e));
+      }
     };
 
     // ---------- repassarSaldo ----------
     document.getElementById('repassarBtn').onclick = async () => {
       try {
+        if (!contract) return alert('Carregue o contrato primeiro');
+        document.getElementById('repassarStatus').textContent = '⏳ Enviando...';
         const tx = await contract.repassarSaldo();
         document.getElementById('repassarStatus').textContent = 'Tx enviada: ' + tx.hash;
         await tx.wait();
         document.getElementById('repassarStatus').textContent += '\n✅ Repasse efetuado';
-      } catch (e) { console.error(e); alert('Erro ao repassar saldo: ' + (e.message || e)); }
+      } catch (e) {
+        console.error(e);
+        alert('Erro ao repassar saldo: ' + (e.message || e));
+      }
     };
 
     document.getElementById('checkBalBtn').onclick = async () => {
       try {
+        if (!provider) return alert('Conecte MetaMask primeiro');
+        if (!contractAddress) return alert('Carregue o contrato primeiro');
         const bal = await provider.getBalance(contractAddress);
         document.getElementById('repassarStatus').textContent = 'Saldo do contrato: ' + ethers.utils.formatEther(bal) + ' ETH';
-      } catch (e) { console.error(e); alert('Erro ao checar saldo'); }
+      } catch (e) {
+        console.error(e);
+        alert('Erro ao checar saldo: ' + (e.message || e));
+      }
     };
 
     // ---------- transferOwnership ----------
     document.getElementById('transferOwnerBtn').onclick = async () => {
       try {
+        if (!contract) return alert('Carregue o contrato primeiro');
         const novo = document.getElementById('newOwner').value.trim();
         if (!ethers.utils.isAddress(novo)) return alert('Endereço inválido');
+        document.getElementById('transferOwnerStatus').textContent = '⏳ Enviando...';
         const tx = await contract.transferOwnership(novo);
         document.getElementById('transferOwnerStatus').textContent = 'Tx enviada: ' + tx.hash;
         await tx.wait();
         document.getElementById('transferOwnerStatus').textContent += '\n✅ Ownership transferido';
-      } catch (e) { console.error(e); alert('Erro ao transferir owner: ' + (e.message || e)); }
+      } catch (e) {
+        console.error(e);
+        alert('Erro ao transferir owner: ' + (e.message || e));
+      }
     };
 
-    // Auto-fill contract address field with placeholder
-    document.getElementById('contractAddr').value = contractAddress === '0xREPLACE_CONTRACT_ADDRESS' ? '' : contractAddress;
-
+    // Auto-fill contract address field with placeholder (done earlier)
   </script>
-  
+
 </body>
 
 </html>
