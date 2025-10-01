@@ -544,72 +544,7 @@
     document.getElementById('contractAddr').value = contractAddress === '0xREPLACE_CONTRACT_ADDRESS' ? '' : contractAddress;
 
   </script>
-  <style>
-  #guiaModal {
-    display: none;
-    position: fixed;
-    z-index: 1000;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.6);
-    justify-content: center;
-    align-items: center;
-  }
-  #guiaContent {
-    background: #fff;
-    padding: 20px;
-    border-radius: 12px;
-    width: 400px;
-    text-align: center;
-    box-shadow: 0 0 15px rgba(0,0,0,0.3);
-  }
-  #guiaContent h2 { margin-bottom: 10px; }
-  #barcode { margin-top: 15px; }
-</style>
-
-<button onclick="gerarGuia()">Gerar Guia com Código de Barras</button>
-
-<div id="guiaModal">
-  <div id="guiaContent">
-    <h2>Guia de Pagamento IPTU</h2>
-    <p><b>Inscrição:</b> 12345-6</p>
-    <p><b>Ano:</b> 2025</p>
-    <p><b>Parcela:</b> 1/12</p>
-    <p><b>Valor:</b> R$ 250,00</p>
-
-    <canvas id="barcode" width="350" height="80"></canvas>
-    <p id="barcodeNum"></p>
-
-    <button onclick="fecharGuia()">Fechar</button>
-  </div>
-</div>
-
-<script>
-function gerarGuia() {
-  const modal = document.getElementById("guiaModal");
-  modal.style.display = "flex";
-
-  // Simula número do código de barras
-  const codigo = "846700000012502300420009123456202500000001";
-  document.getElementById("barcodeNum").innerText = codigo;
-
-  // Desenha barras no canvas
-  const canvas = document.getElementById("barcode");
-  const ctx = canvas.getContext("2d");
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  ctx.fillStyle = "#000";
-  for (let i = 0; i < codigo.length; i++) {
-    if (parseInt(codigo[i]) % 2 === 0) {
-      ctx.fillRect(10 + i * 6, 10, 3, 60);
-    }
-  }
-}
-
-function fecharGuia() {
-  document.getElementById("guiaModal").style.display = "none";
-}
-</script>
-
+  
 </body>
 
 </html>
