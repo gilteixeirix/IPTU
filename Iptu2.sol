@@ -48,10 +48,12 @@ contract IPTUChain {
                             ESTRUTURA
     //////////////////////////////////////////////////////////////*/
     struct Lancamento {
+        // Identificação
         string inscricao;
         address contribuinte;
         uint256 ano;
 
+        // Financeiro
         uint256 total;
         uint256 parcelas;
         uint256 valorParcela;
@@ -59,22 +61,44 @@ contract IPTUChain {
         uint256 pagas;
         uint256 valorPago;
 
-        uint256 vencimento; // timestamp final
+        // Regras
+        uint256 vencimento;
         bool ativo;
 
+        // 🔐 Rastreabilidade jurídica
+        string versaoSistema;
+        string origem;
+        bytes32 hashCalculo;
+
+        // Controle de parcelas
         mapping(uint256 => bool) parcelaPaga;
     }
 
     mapping(bytes32 => Lancamento) private _lanc;
 
-    // saldo acumulado para saque (pull payment)
+    // 💰 saldo acumulado (pull payment)
     uint256 public saldoPrefeitura;
 
     /*//////////////////////////////////////////////////////////////
                                 EVENTOS
     //////////////////////////////////////////////////////////////*/
-    event Lancado(bytes32 id, string inscricao, address contribuinte, uint256 ano);
-    event ParcelaPaga(bytes32 id, uint256 parcela, address pagador, uint256 valor);
+    event Lancado(
+        bytes32 id,
+        string inscricao,
+        address contribuinte,
+        uint256 ano,
+        string versaoSistema,
+        bytes32 hashCalculo
+    );
+
+    event ParcelaPaga(
+        bytes32 id,
+        uint256 parcela,
+        address pagador,
+        uint256 valor,
+        uint256 timestamp
+    );
+
     event PrefeituraSacou(uint256 valor);
     event PrefeituraAtualizada(address nova);
 
@@ -105,7 +129,10 @@ contract IPTUChain {
         uint256 ano,
         uint256 total,
         uint256 parcelas,
-        uint256 vencimento
+        uint256 vencimento,
+        string calldata versaoSistema,
+        string calldata origem,
+        bytes32 hashCalculo
     ) external onlyPrefeitura returns (bytes32 id) {
 
         if (
@@ -115,6 +142,7 @@ contract IPTUChain {
             parcelas == 0
         ) revert InvalidParams();
 
+        // 🔐 ID único e seguro
         id = keccak256(abi.encodePacked(inscricao, contribuinte, ano));
 
         if (_exists(id)) revert AlreadyExists();
@@ -133,7 +161,19 @@ contract IPTUChain {
         L.vencimento = vencimento;
         L.ativo = true;
 
-        emit Lancado(id, inscricao, contribuinte, ano);
+        // 🔐 rastreabilidade
+        L.versaoSistema = versaoSistema;
+        L.origem = origem;
+        L.hashCalculo = hashCalculo;
+
+        emit Lancado(
+            id,
+            inscricao,
+            contribuinte,
+            ano,
+            versaoSistema,
+            hashCalculo
+        );
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -152,7 +192,7 @@ contract IPTUChain {
 
         uint256 valorDevido = L.valorParcela;
 
-        // multa simples após vencimento (exemplo: +10%)
+        // 📅 multa simples após vencimento (10%)
         if (block.timestamp > L.vencimento) {
             valorDevido = (valorDevido * 110) / 100;
         }
@@ -163,10 +203,16 @@ contract IPTUChain {
         L.pagas += 1;
         L.valorPago += msg.value;
 
-        // acumula saldo (mais seguro que transferir direto)
+        // 💰 acumula saldo (seguro)
         saldoPrefeitura += msg.value;
 
-        emit ParcelaPaga(id, parcela, msg.sender, msg.value);
+        emit ParcelaPaga(
+            id,
+            parcela,
+            msg.sender,
+            msg.value,
+            block.timestamp
+        );
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -188,16 +234,19 @@ contract IPTUChain {
     function getResumo(bytes32 id)
         external view
         returns (
-            string memory,
-            address,
-            uint256,
-            uint256,
-            uint256,
-            uint256,
-            uint256,
-            uint256,
-            bool,
-            uint256
+            string memory inscricao,
+            address contribuinte,
+            uint256 ano,
+            uint256 total,
+            uint256 parcelas,
+            uint256 valorParcela,
+            uint256 pagas,
+            uint256 valorPago,
+            bool ativo,
+            uint256 vencimento,
+            string memory versaoSistema,
+            string memory origem,
+            bytes32 hashCalculo
         )
     {
         Lancamento storage L = _requireLanc(id);
@@ -212,8 +261,19 @@ contract IPTUChain {
             L.pagas,
             L.valorPago,
             L.ativo,
-            L.vencimento
+            L.vencimento,
+            L.versaoSistema,
+            L.origem,
+            L.hashCalculo
         );
+    }
+
+    function parcelaEstaPaga(bytes32 id, uint256 parcela)
+        external view returns (bool)
+    {
+        Lancamento storage L = _requireLanc(id);
+        if (parcela == 0 || parcela > L.parcelas) revert InvalidParcel();
+        return L.parcelaPaga[parcela];
     }
 
     /*//////////////////////////////////////////////////////////////
