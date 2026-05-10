@@ -1,193 +1,533 @@
-#![no_std]
+<!doctype html>
+<html lang="pt-BR">
 
-use soroban_sdk::{
-    contract, contractimpl, contracttype, Address, Env, Symbol, Vec, BytesN
-};
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Lançamento de IPTU Chain V2</title>
 
-#[contracttype]
-#[derive(Clone)]
-pub struct Lancamento {
-    pub inscricao: Symbol,
-    pub contribuinte: Address,
-    pub ano: u32,
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
 
-    pub total: i128,
-    pub parcelas: u32,
-    pub valor_parcela: i128,
-
-    pub pagas: u32,
-    pub valor_pago: i128,
-
-    pub vencimento: u64,
-    pub ativo: bool,
-
-    // rastreabilidade
-    pub versao: Symbol,
-    pub origem: Symbol,
-    pub hash_calculo: BytesN<32>,
-}
-
-#[contracttype]
-pub enum DataKey {
-    Owner,
-    Prefeitura,
-    Lancamento(BytesN<32>),
-    Parcela(BytesN<32>, u32),
-    SaldoPrefeitura,
-}
-
-#[contract]
-pub struct IPTUContract;
-
-#[contractimpl]
-impl IPTUContract {
-
-    // INIT
-    pub fn init(env: Env, owner: Address, prefeitura: Address) {
-        owner.require_auth();
-        env.storage().instance().set(&DataKey::Owner, &owner);
-        env.storage().instance().set(&DataKey::Prefeitura, &prefeitura);
-        env.storage().instance().set(&DataKey::SaldoPrefeitura, &0i128);
+  <style>
+    :root {
+      --bg: #0f1724;
+      --card: #071329;
+      --accent: #7c3aed;
+      --muted: #9fb0c8;
+      color: #e6eef8
     }
 
-    // HELPER
-    fn get_prefeitura(env: &Env) -> Address {
-        env.storage().instance().get(&DataKey::Prefeitura).unwrap()
+    body {
+      margin: 0;
+      background: linear-gradient(180deg, #071022 0%, #071733 100%);
+      font-family: Inter, Arial, sans-serif;
+      color: var(--muted);
+      padding: 20px
     }
 
-    fn get_owner(env: &Env) -> Address {
-        env.storage().instance().get(&DataKey::Owner).unwrap()
+    .wrap {
+      max-width: 980px;
+      margin: 12px auto
     }
 
-    // GERAR ID
-    pub fn make_id(env: Env, inscricao: Symbol, contribuinte: Address, ano: u32) -> BytesN<32> {
-        env.crypto().sha256(&(
-            inscricao, contribuinte, ano
-        ).into_val(&env))
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center
     }
 
-    // LANÇAR IPTU
-    pub fn lancar_iptu(
-        env: Env,
-        inscricao: Symbol,
-        contribuinte: Address,
-        ano: u32,
-        total: i128,
-        parcelas: u32,
-        vencimento: u64,
-        versao: Symbol,
-        origem: Symbol,
-        hash_calculo: BytesN<32>
-    ) -> BytesN<32> {
+    h1 {
+      color: #fff;
+      margin: 0;
+      font-size: clamp(1.2rem, 2vw, 1.8rem)
+    }
 
-        let prefeitura = Self::get_prefeitura(&env);
-        prefeitura.require_auth();
+    .card {
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 12px;
+      padding: 16px;
+      margin: 12px 0;
+      box-shadow: 0 6px 18px rgba(2, 6, 23, 0.6)
+    }
 
-        let id = Self::make_id(env.clone(), inscricao.clone(), contribuinte.clone(), ano);
+    label {
+      display: block;
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 8px
+    }
 
-        if env.storage().instance().has(&DataKey::Lancamento(id.clone())) {
-            panic!("Already exists");
-        }
+    input[type=text],
+    input[type=number],
+    textarea,
+    select {
+      width: 100%;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      background: transparent;
+      color: var(--muted);
+      box-sizing: border-box
+    }
 
-        let valor_parcela = total / parcelas as i128;
+    button {
+      background: var(--accent);
+      color: #fff;
+      padding: 8px 12px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer
+    }
 
-        let lanc = Lancamento {
-            inscricao,
+    .muted {
+      color: var(--muted);
+      font-size: 13px
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px
+    }
+
+    .result {
+      white-space: pre-wrap;
+      background: rgba(0, 0, 0, 0.18);
+      padding: 10px;
+      border-radius: 8px;
+      color: #dcefff;
+      margin-top: 8px
+    }
+
+    footer {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 13px;
+      text-align: center
+    }
+
+    @media (max-width: 600px) {
+      .row {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="wrap">
+
+    <header>
+      <h1>Lançamento de IPTU Chain V2</h1>
+      <button id="connectBtn">Conectar MetaMask</button>
+      <div class="muted">Conta: <span id="addr">—</span></div>
+    </header>
+
+    <div class="card">
+
+      <div style="display:flex; align-items:center; gap:10px;">
+
+        <label for="contractAddr">Endereço do contrato</label>
+
+        <input id="contractAddr" type="text" placeholder="0x..."
+          style="width:500px; height:28px; margin-top:20px;" />
+
+      </div>
+
+      <div style="margin-top:8px; display:flex; flex-wrap:wrap; gap:8px;">
+        <button id="loadBtn">Carregar contrato</button>
+        <button id="refreshMetaBtn">Atualizar dados</button>
+      </div>
+
+      <div class="result" id="status">Aguardando ação...</div>
+    </div>
+
+    <div class="card">
+
+      <h3 style="color:#fff;margin-top:0">Consultar Lançamento</h3>
+
+      <div class="row">
+
+        <div>
+          <label>Inscrição</label>
+          <input id="inscricao" placeholder="ex: 12345-6" />
+        </div>
+
+        <div>
+          <label>Ano</label>
+          <input id="ano" placeholder="2025" />
+        </div>
+
+      </div>
+
+      <label>Contribuinte</label>
+      <input id="contribuinteId" placeholder="0x..." />
+
+      <div style="display:flex; align-items:center; gap:10px;">
+
+        <label>ID (bytes32)</label>
+
+        <input id="idField" type="text" placeholder="0x..."
+          style="width:500px; height:28px; margin-top:20px;" />
+
+      </div>
+
+      <div style="margin-top:8px; display:flex; flex-wrap:wrap; gap:8px;">
+        <button id="makeIdBtn">Gerar ID</button>
+        <button id="consultBtn">Consultar Resumo</button>
+      </div>
+
+      <div class="result" id="resumoArea">—</div>
+
+    </div>
+
+    <div class="card">
+
+      <h3 style="color:#fff;margin-top:0">Pagar Parcela</h3>
+
+      <label>ID do lançamento</label>
+      <input id="payId" placeholder="0x..." />
+
+      <div class="row">
+
+        <div>
+          <label>Nº da parcela</label>
+          <input id="parcelaNum" placeholder="1" />
+        </div>
+
+        <div>
+          <label>Valor Stablecoin</label>
+          <input id="parcelaVal" placeholder="ex: 100.00" />
+        </div>
+
+      </div>
+
+      <div style="margin-top:8px; display:flex; flex-wrap:wrap; gap:8px;">
+        <button id="fillParcelValue">Buscar valor oficial</button>
+        <button id="payBtn">Pagar Parcela</button>
+      </div>
+
+      <div class="result" id="payStatus">—</div>
+
+    </div>
+
+    <div class="card" id="adminCard" style="display:none">
+
+      <h3 style="color:#fff;margin-top:0">Administração</h3>
+
+      <details open>
+
+        <summary style="cursor:pointer">Lançar IPTU</summary>
+
+        <div style="margin-top:8px">
+
+          <label>Inscrição</label>
+          <input id="l_inscricao" />
+
+          <label>Contribuinte</label>
+          <input id="l_contribuinte" placeholder="0x..." />
+
+          <div class="row">
+
+            <div>
+              <label>Ano</label>
+              <input id="l_ano" />
+            </div>
+
+            <div>
+              <label>Parcelas</label>
+              <input id="l_parcelas" />
+            </div>
+
+          </div>
+
+          <label>Total Stablecoin</label>
+          <input id="l_total" />
+
+          <label>Hash Documento Jurídico</label>
+          <input id="docHash" placeholder="0x..." />
+
+          <div style="margin-top:8px; display:flex; flex-wrap:wrap; gap:8px;">
+            <button id="lancarBtn">Lançar IPTU</button>
+          </div>
+
+          <div class="result" id="lancarStatus">—</div>
+
+        </div>
+
+      </details>
+
+    </div>
+
+    <footer>
+      IPTU Chain V2 — Auditoria blockchain para arrecadação municipal.
+    </footer>
+
+  </div>
+
+  <script>
+
+    const ABI = [
+      "function owner() view returns(address)",
+      "function gerarId(string,address,uint256) pure returns(bytes32)",
+      "function getResumo(bytes32) view returns(string,address,uint256,uint256,uint256,uint256,uint256,uint256,bool,bytes32)",
+      "function lancarIPTU(string,address,uint256,uint256,uint256,bytes32)",
+      "function pagarParcela(bytes32,uint256)",
+      "event ParcelaPaga(bytes32 indexed id,uint256 parcela,address indexed contribuinte,uint256 valor,uint256 timestamp,bytes32 comprovanteHash)"
+    ];
+
+    const ERC20_ABI = [
+      "function approve(address spender,uint256 amount) returns(bool)"
+    ];
+
+    const TOKEN_ADDRESS = "0xSEU_TOKEN";
+
+    let provider;
+    let signer;
+    let contract;
+    let token;
+    let connectedAddress;
+    let contractAddress;
+
+    function status(msg) {
+      document.getElementById('status').textContent = msg;
+    }
+
+    document.getElementById('connectBtn').onclick = async () => {
+
+      if (!window.ethereum) {
+        alert('MetaMask não encontrado');
+        return;
+      }
+
+      await window.ethereum.request({ method: 'eth_requestAccounts' });
+
+      provider = new ethers.providers.Web3Provider(window.ethereum);
+      signer = provider.getSigner();
+
+      connectedAddress = await signer.getAddress();
+
+      document.getElementById('addr').textContent = connectedAddress;
+
+      const network = await provider.getNetwork();
+
+      if (network.chainId !== 137) {
+        alert('Conecte na Polygon');
+        return;
+      }
+
+      token = new ethers.Contract(TOKEN_ADDRESS, ERC20_ABI, signer);
+
+      status('Carteira conectada');
+
+    };
+
+    document.getElementById('loadBtn').onclick = async () => {
+
+      contractAddress = document.getElementById('contractAddr').value.trim();
+
+      if (!ethers.utils.isAddress(contractAddress)) {
+        alert('Contrato inválido');
+        return;
+      }
+
+      contract = new ethers.Contract(contractAddress, ABI, signer);
+
+      status('Contrato carregado com sucesso');
+
+      try {
+
+        contract.on('ParcelaPaga', (
+          id,
+          parcela,
+          contribuinte,
+          valor,
+          timestamp,
+          comprovanteHash
+        ) => {
+
+          console.log('Evento auditável:', {
+            id,
+            parcela,
             contribuinte,
-            ano,
-            total,
-            parcelas,
-            valor_parcela,
-            pagas: 0,
-            valor_pago: 0,
-            vencimento,
-            ativo: true,
-            versao,
-            origem,
-            hash_calculo,
-        };
+            valor: valor.toString(),
+            timestamp,
+            comprovanteHash
+          });
 
-        env.storage().instance().set(&DataKey::Lancamento(id.clone()), &lanc);
+        });
 
-        id
-    }
+      } catch (e) {
+        console.log(e);
+      }
 
-    // PAGAR PARCELA
-    pub fn pagar_parcela(
-        env: Env,
-        id: BytesN<32>,
-        parcela: u32,
-        valor: i128,
-        pagador: Address
-    ) {
+    };
 
-        pagador.require_auth();
+    document.getElementById('makeIdBtn').onclick = async () => {
 
-        let mut lanc: Lancamento = env.storage()
-            .instance()
-            .get(&DataKey::Lancamento(id.clone()))
-            .unwrap();
+      const inscr = document.getElementById('inscricao').value.trim();
+      const contribuinte = document.getElementById('contribuinteId').value.trim();
+      const ano = Number(document.getElementById('ano').value);
 
-        if !lanc.ativo {
-            panic!("Not active");
+      const id = ethers.utils.solidityKeccak256(
+        ['string', 'address', 'uint256'],
+        [inscr, contribuinte, ano]
+      );
+
+      document.getElementById('idField').value = id;
+      document.getElementById('payId').value = id;
+
+    };
+
+    document.getElementById('consultBtn').onclick = async () => {
+
+      try {
+
+        const id = document.getElementById('idField').value.trim();
+
+        const r = await contract.getResumo(id);
+
+        let texto = '';
+
+        texto += 'Inscrição: ' + r[0] + '
+';
+        texto += 'Contribuinte: ' + r[1] + '
+';
+        texto += 'Ano: ' + r[2] + '
+';
+        texto += 'Total: ' + ethers.utils.formatUnits(r[3], 6) + '
+';
+        texto += 'Parcelas: ' + r[4] + '
+';
+        texto += 'Valor Parcela: ' + ethers.utils.formatUnits(r[5], 6) + '
+';
+        texto += 'Pagas: ' + r[6] + '
+';
+        texto += 'Valor Pago: ' + ethers.utils.formatUnits(r[7], 6) + '
+';
+        texto += 'Ativo: ' + r[8] + '
+';
+        texto += 'Documento Hash: ' + r[9] + '
+';
+
+        document.getElementById('resumoArea').textContent = texto;
+
+        document.getElementById('parcelaVal').value = ethers.utils.formatUnits(r[5], 6);
+
+      } catch (e) {
+        alert('Erro consulta');
+      }
+
+    };
+
+    document.getElementById('fillParcelValue').onclick = async () => {
+
+      const id = document.getElementById('payId').value.trim();
+
+      const r = await contract.getResumo(id);
+
+      document.getElementById('parcelaVal').value = ethers.utils.formatUnits(r[5], 6);
+
+    };
+
+    document.getElementById('payBtn').onclick = async () => {
+
+      try {
+
+        const id = document.getElementById('payId').value.trim();
+        const parcela = Number(document.getElementById('parcelaNum').value);
+
+        const r = await contract.getResumo(id);
+
+        const valor = r[5];
+
+        const approveTx = await token.approve(contractAddress, valor);
+
+        await approveTx.wait();
+
+        const tx = await contract.pagarParcela(id, parcela);
+
+        document.getElementById('payStatus').textContent = 'Transação enviada: ' + tx.hash;
+
+        const receipt = await tx.wait();
+
+        const explorer = `https://polygonscan.com/tx/${tx.hash}`;
+
+        let comprovante = '';
+
+        comprovante += '✅ PAGAMENTO CONFIRMADO
+
+';
+        comprovante += 'TX HASH:
+' + tx.hash + '
+
+';
+        comprovante += 'EXPLORER:
+' + explorer + '
+
+';
+        comprovante += 'BLOCO:
+' + receipt.blockNumber + '
+';
+
+        document.getElementById('payStatus').textContent = comprovante;
+
+      } catch (e) {
+
+        console.log(e);
+
+        if (e.message.includes('Parcela ja paga')) {
+          alert('Parcela já quitada');
+          return;
         }
 
-        if parcela == 0 || parcela > lanc.parcelas {
-            panic!("Invalid parcela");
-        }
+        alert('Erro no pagamento');
 
-        let parcela_key = DataKey::Parcela(id.clone(), parcela);
+      }
 
-        if env.storage().instance().has(&parcela_key) {
-            panic!("Already paid");
-        }
+    };
 
-        let mut valor_devido = lanc.valor_parcela;
+    document.getElementById('lancarBtn').onclick = async () => {
 
-        if env.ledger().timestamp() > lanc.vencimento {
-            valor_devido = valor_devido * 110 / 100;
-        }
+      try {
 
-        if valor != valor_devido {
-            panic!("Wrong amount");
-        }
+        const inscr = document.getElementById('l_inscricao').value.trim();
+        const cont = document.getElementById('l_contribuinte').value.trim();
+        const ano = Number(document.getElementById('l_ano').value);
+        const parcelas = Number(document.getElementById('l_parcelas').value);
+        const total = document.getElementById('l_total').value.trim();
+        const docHash = document.getElementById('docHash').value.trim();
 
-        // marca parcela
-        env.storage().instance().set(&parcela_key, &true);
+        const totalUnits = ethers.utils.parseUnits(total, 6);
 
-        lanc.pagas += 1;
-        lanc.valor_pago += valor;
+        const tx = await contract.lancarIPTU(
+          inscr,
+          cont,
+          ano,
+          totalUnits,
+          parcelas,
+          docHash
+        );
 
-        env.storage().instance().set(&DataKey::Lancamento(id.clone()), &lanc);
+        document.getElementById('lancarStatus').textContent = 'Tx enviada: ' + tx.hash;
 
-        // acumula saldo
-        let mut saldo: i128 = env.storage()
-            .instance()
-            .get(&DataKey::SaldoPrefeitura)
-            .unwrap();
+        await tx.wait();
 
-        saldo += valor;
+        document.getElementById('lancarStatus').textContent += '
+✅ Confirmada';
 
-        env.storage().instance().set(&DataKey::SaldoPrefeitura, &saldo);
-    }
+      } catch (e) {
 
-    // SAQUE
-    pub fn sacar(env: Env) {
-        let prefeitura = Self::get_prefeitura(&env);
-        prefeitura.require_auth();
+        console.log(e);
+        alert('Erro ao lançar IPTU');
 
-        let saldo: i128 = env.storage()
-            .instance()
-            .get(&DataKey::SaldoPrefeitura)
-            .unwrap();
+      }
 
-        // aqui você integraria com token contract
+    };
 
-        env.storage().instance().set(&DataKey::SaldoPrefeitura, &0i128);
-    }
+  </script>
 
-    // CONSULTA
-    pub fn get_resumo(env: Env, id: BytesN<32>) -> Lancamento {
-        env.storage().instance().get(&DataKey::Lancamento(id)).unwrap()
-    }
-}
+</body>
+
+</html>
