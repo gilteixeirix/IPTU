@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IPTU Chain V2</title>
+<script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+<style>
+body{
+font-family:Arial;
+background:#0f172a;
+color:white;
+padding:20px;
+}
+
+.card{
+background:#1e293b;
+padding:20px;
+border-radius:12px;
+margin-bottom:20px;
+}
+
+input,button{
+padding:10px;
+margin-top:10px;
+width:100%;
+border-radius:8px;
+border:none;
+}
+
+button{
+background:#7c3aed;
+color:white;
+cursor:pointer;
+}
+
+.result{
+margin-top:15px;
+background:#111827;
+padding:12px;
+border-radius:8px;
+white-space:pre-wrap;
+}
+</style>
+</head>
+<body>
+
+<h1>IPTU Chain V2</h1>
+
+<div class="card">
+<h3>Conectar Carteira</h3>
+<button id="connectBtn">Conectar MetaMask</button>
+<div id="wallet"></div>
+</div>
+
+<div class="card">
+<h3>Consultar IPTU</h3>
+<input id="inscricao" placeholder="Inscrição municipal">
+<input id="contribuinte" placeholder="Carteira do contribuinte">
+<input id="ano" placeholder="Ano">
+<button id="gerarIdBtn">Gerar ID</button>
+<input id="idField" placeholder="ID bytes32">
+<button id="consultarBtn">Consultar</button>
+<div class="result" id="consulta"></div>
+</div>
+
+<div class="card">
+<h3>Pagar Parcela</h3>
+<input id="payId" placeholder="ID">
+<input id="parcela" placeholder="Número da parcela">
+<button id="payBtn">Pagar</button>
+<div class="result" id="payResult"></div>
+</div>
+
+<script>
+
+const CONTRACT_ADDRESS = "0xSEU_CONTRATO";
+const TOKEN_ADDRESS = "0xSEU_TOKEN";
+
+const ABI = [
+"function gerarId(string,address,uint256) view returns(bytes32)",
+"function getResumo(bytes32) view returns(string,address,uint256,uint256,uint256,uint256,uint256,uint256,bool,bytes32)",
+"function pagarParcela(bytes32,uint256)",
+"event ParcelaPaga(bytes32 indexed id,uint256 parcela,address indexed contribuinte,uint256 valor,uint256 timestamp,bytes32 comprovanteHash)"
+];
+
+const ERC20_ABI = [
+"function approve(address spender,uint256 amount) returns(bool)"
+];
+
+let provider;
+let signer;
+let contract;
+let token;
+
+async function conectar(){
+
+await window.ethereum.request({method:'eth_requestAccounts'});
+
+provider = new ethers.providers.Web3Provider(window.ethereum);
+signer = provider.getSigner();
+
+const network = await provider.getNetwork();
+
+if(network.chainId !== 137){
+alert('Conecte na Polygon');
+return;
+}
+
+contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
+
+token = new ethers.Contract(TOKEN_ADDRESS, ERC20_ABI, signer);
+
+const addr = await signer.getAddress();
+
+document.getElementById('wallet').innerText = addr;
+}
+
+async function gerarId(){
+
+const inscricao = document.getElementById('inscricao').value;
+const contribuinte = document.getElementById('contribuinte').value;
+const ano = document.getElementById('ano').value;
+
+const id = await contract.gerarId(
+inscricao,
+contribuinte,
+ano
+);
+
+
+
+document.getElementById('idField').value = id;
+document.getElementById('payId').value = id;
+}
+
+async function consultar(){
+
+const id = document.getElementById('idField').value;
+
+const r = await contract.getResumo(id);
+
+let texto = '';
+texto += 'Inscrição: '+r[0]+'\n';
+texto += 'Contribuinte: '+r[1]+'\n';
+texto += 'Ano: '+r[2]+'\n';
+texto += 'Total: '+ethers.utils.formatUnits(r[3],6)+'\n';
+texto += 'Parcelas: '+r[4]+'\n';
+texto += 'Valor Parcela: '+ethers.utils.formatUnits(r[5],6)+'\n';
+texto += 'Pagas: '+r[6]+'\n';
+texto += 'Ativo: '+r[8]+'\n';
+texto += 'Documento Hash: '+r[9]+'\n';
+
+
+document.getElementById('consulta').innerText = texto;
+}
+
+async function pagar(){
+
+const id = document.getElementById('payId').value;
+const parcela = document.getElementById('parcela').value;
+
+const r = await contract.getResumo(id);
+
+const valor = r[5];
+
+const approveTx = await token.approve(
+CONTRACT_ADDRESS,
+valor
+);
+
+await approveTx.wait();
+
+const tx = await contract.pagarParcela(id,parcela);
+
+const receipt = await tx.wait();
+
+const explorer = `https://polygonscan.com/tx/${tx.hash}`;
+
+let comprovante = '';
+comprovante += 'Pagamento confirmado\n\n';
+comprovante += 'TX HASH:\n'+tx.hash+'\n\n';
+comprovante += 'Explorer:\n'+explorer+'\n\n';
+comprovante += 'Bloco:\n'+receipt.blockNumber+'\n';
+
+
+document.getElementById('payResult').innerText = comprovante;
+}
+
+contract?.on('ParcelaPaga',(
+id,parcela,contribuinte,valor,timestamp)=>{
+console.log('Evento capturado:',id);
+});
+
+
+document.getElementById('connectBtn').onclick = conectar;
+document.getElementById('gerarIdBtn').onclick = gerarId;
+document.getElementById('consultarBtn').onclick = consultar;
+document.getElementById('payBtn').onclick = pagar;
+
+</script>
+
+</body>
+</html>
